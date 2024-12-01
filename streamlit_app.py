@@ -30,6 +30,38 @@ else:
     st.error("No GPU found. Using CPU instead.")
 
 # --- Utility Functions ---
+#@st.cache_resource
+#def load_model():
+    """
+    Load the tokenizer and model, and ensure both are on the same device.
+    """
+
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16
+    )
+
+    tokenizer = AutoTokenizer.from_pretrained(NEW_MODEL, token=access_token)
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_NAME,
+        access_token,
+        torch_dtype=torch.float16 if device.type == "cuda" else torch.float32
+    )
+
+    # Resize token embeddings to match the tokenizer
+    model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
+
+    # Load the Peft model (adapter) on top of the base model
+    model = PeftModel.from_pretrained(model, NEW_MODEL)
+
+    # Merge the adapter layers into the base model and unload them
+    model = model.merge_and_unload()
+
+    model = model.to(device)  # Move the model to the correct device
+
+    return model, tokenizer
+
+# Load model and tokenizer
+#model, tokenizer = load_model()
 
 # --- Custom Streamlit Streamer ---
 class StreamlitTextStreamer(BaseStreamer):
