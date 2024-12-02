@@ -7,7 +7,6 @@ from peft import PeftModel
 # --- Constants ---
 MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-Instruct"
 NEW_MODEL = "Benchoonngg/Tasty-Unsloth-Llama-3.1-8B-v4"
-access_token = "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"
 
 # Alpaca prompt template
 alpaca_prompt = """Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
