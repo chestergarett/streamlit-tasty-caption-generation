@@ -54,7 +54,7 @@ pip install -r requirements-windows.txt
 pip install -r requirements-mac.txt
 ```
 
-<br>### Step 6: Run the Streamlit App
+### Step 6: Run the Streamlit App
 Run the application using the following command:
 ```bash
 streamlit run streamlit_app.py
