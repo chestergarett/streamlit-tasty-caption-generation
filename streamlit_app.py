@@ -177,6 +177,10 @@ with st.sidebar:
     # Default Settings Button at the Bottom
     st.button("Default Settings", on_click=reset_to_defaults)
 
+# Initialize session state for storing generated captions
+if "generated_captions" not in st.session_state:
+    st.session_state["generated_captions"] = []
+
 # Generate button in the main section
 if st.button("Generate Captions"):
     if not instruction.strip() or not input_text.strip():
@@ -193,9 +197,11 @@ if st.button("Generate Captions"):
             device=0  # Explicitly set to GPU device 0
         )
 
+        # Clear the stored captions before generating new ones
+        st.session_state["generated_captions"] = []
+
         # Generate multiple captions
         for i in range(st.session_state["num_captions"]):
-            output_placeholder = st.empty()  # Placeholder for each caption
             current_output = ""
             
             # Generate caption for each iteration
@@ -211,5 +217,11 @@ if st.button("Generate Captions"):
                 # Extract the text generated so far
                 current_output += token["generated_text"]
             
-            # Display the generated caption
-            output_placeholder.markdown(f"**Caption {i + 1}:** {current_output}")
+            # Add the generated caption to session state
+            st.session_state["generated_captions"].append(f"**Caption {i + 1}:** {current_output}")
+
+# Display the captions stored in session state
+if st.session_state["generated_captions"]:
+    st.write("Generated Captions:")
+    for caption in st.session_state["generated_captions"]:
+        st.markdown(caption)
