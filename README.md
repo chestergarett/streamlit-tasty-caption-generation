@@ -21,7 +21,7 @@ cd streamlit-tasty-caption-generation
 
 
 ### Step 2: Create a virtual environment
-python -m venv venv
+```python -m venv venv```
 
 # Activate the virtual environment
 # On Windows
