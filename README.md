@@ -18,18 +18,19 @@ A Streamlit application for generating captions efficiently using a GPU-accelera
 git clone https://github.com/Benchoonngg/streamlit-tasty-caption-generation.git
 cd streamlit-tasty-caption-generation
 ```
-<br>### Step 2: Clone the Model from HuggingFace
+
+### Step 2: Clone the Model from HuggingFace
 ```bash
 git lfs install
 git clone https://huggingface.co/Benchoonngg/Tasty-Unsloth-Llama-3.1-8B-v4
 ```
 
-<br>### Step 3: Create a virtual environment
+### Step 3: Create a virtual environment
 ```bash
 python -m venv venv
 ```
 
-<br>### Activate the virtual environment
+### Activate the virtual environment
 On Windows
 ```bash
 venv\Scripts\activate
@@ -38,11 +39,13 @@ On Mac/Linux
 ```bash
 source venv/bin/activate
 ```
-<br>### Step 4: Install Streamlit
+
+### Step 4: Install Streamlit
 ```bash
 pip install streamlit
 ```
-<br>### Step 5: Install the Correct Dependencies
+
+### Step 5: Install the Correct Dependencies
 Choose your operating system and install the appropriate requirements file:
 ```bash
 pip install -r requirements-windows.txt
