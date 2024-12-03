@@ -91,12 +91,20 @@ class StreamlitTextStreamer(BaseStreamer):
         """Called when generation is finished."""
         pass  # Optional cleanup
 
-# --- Streamlit App ---
-st.title("Llama 3.1 Caption Generator with GPU Support")
+## --- Streamlit App ---
+st.markdown(
+    "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
+    unsafe_allow_html=True
+)
 
 # Input fields in the main section
-instruction = st.text_input("Enter Instruction:", "Generate a Holiday Caption.")
-input_text = st.text_area("Enter Context:", "Tite Tite")
+instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
+input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
+
+# Floating "Contact Support" Button
+st.markdown("""
+    <div class="floating-support", '_blank')">Contact Support</div>
+""", unsafe_allow_html=True)
 
 # Function to reset all sliders to default values
 def reset_to_defaults():
@@ -124,7 +132,7 @@ with st.sidebar:
     # Number of Captions Slider
     st.markdown(
         "<div class='inline-label'>Total Captions<div class='tooltip'>❔"
-        "<span class='tooltiptext'>Select the number of captions to generate (up to 20).</span>"
+        "<span class='tooltiptext'>Select the number of captions to generate.</span>"
         "</div></div>", unsafe_allow_html=True)
     st.slider(
         "", min_value=1, max_value=20,
@@ -144,7 +152,7 @@ with st.sidebar:
     # Temperature Slider
     st.markdown(
         "<div class='inline-label'>Temperature<div class='tooltip'>❔"
-        "<span class='tooltiptext'>Controls randomness. Lower values make output more focused, higher values make it more diverse.</span>"
+        "<span class='tooltiptext'>Lower values makes output more focused/predictable, higher values make it more creative/unique.</span>"
         "</div></div>", unsafe_allow_html=True)
     st.slider(
         "", min_value=0.0, max_value=1.5,
@@ -154,7 +162,7 @@ with st.sidebar:
     # Top-K Sampling Slider
     st.markdown(
         "<div class='inline-label'>Top-K<div class='tooltip'>❔"
-        "<span class='tooltiptext'>Limits sampling to the top K tokens. Smaller values make it more deterministic.</span>"
+        "<span class='tooltiptext'>Lower values limit options to the most common words, higher values include less common words for variety.</span>"
         "</div></div>", unsafe_allow_html=True)
     st.slider(
         "", min_value=0, max_value=100,
@@ -164,7 +172,7 @@ with st.sidebar:
     # Top-P Sampling Slider
     st.markdown(
         "<div class='inline-label'>Top-P<div class='tooltip'>❔"
-        "<span class='tooltiptext'>Limits sampling to top P probability mass. Lower values focus on high-probability tokens.</span>"
+        "<span class='tooltiptext'>Lower values stick to safer word choices, higher values add mores variety.</span>"
         "</div></div>", unsafe_allow_html=True)
     st.slider(
         "", min_value=0.0, max_value=1.0,
