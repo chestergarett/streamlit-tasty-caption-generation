@@ -182,7 +182,7 @@ if st.button("Generate Captions"):
     if not instruction.strip() or not input_text.strip():
         st.error("Instruction and context cannot be empty.")
     else:
-        st.write(f"Generating {num_captions} captions...")
+        st.write(f"Generating {st.session_state['num_captions']} captions...")
         prompt = alpaca_prompt.format(instruction, input_text, "")
 
         # Initialize generator and ensure it runs on the GPU
@@ -194,17 +194,17 @@ if st.button("Generate Captions"):
         )
 
         # Generate multiple captions
-        for i in range(num_captions):
+        for i in range(st.session_state["num_captions"]):
             output_placeholder = st.empty()  # Placeholder for each caption
             current_output = ""
             
             # Generate caption for each iteration
             for token in generator(
                 prompt,
-                max_length=max_length,
-                temperature=temperature,
-                top_k=top_k,
-                top_p=top_p,
+                max_length=st.session_state["max_length"],
+                temperature=st.session_state["temperature"],
+                top_k=st.session_state["top_k"],
+                top_p=st.session_state["top_p"],
                 do_sample=True,
                 return_full_text=False,  # Stream partial output
             ):
