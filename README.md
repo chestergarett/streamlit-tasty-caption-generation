@@ -1,4 +1,4 @@
-# Caption Generation Streamlit
+# Tasty Caption Generation
 
 A Streamlit application for generating captions efficiently using a GPU-accelerated pipeline. Follow the steps below to set up and run the project.
 
@@ -19,6 +19,11 @@ git clone https://github.com/Benchoonngg/streamlit-tasty-caption-generation.git
 cd streamlit-tasty-caption-generation
 ```
 
+### Step 2: Clone the Model from HuggingFace
+```bash
+git lfs install
+git clone https://huggingface.co/Benchoonngg/Tasty-Unsloth-Llama-3.1-8B-v4
+```
 
 ### Step 2: Create a virtual environment
 ```bash
