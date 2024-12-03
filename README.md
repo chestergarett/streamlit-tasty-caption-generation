@@ -19,6 +19,12 @@ git clone https://github.com/Benchoonngg/streamlit-tasty-caption-generation.git
 cd streamlit-tasty-caption-generation
 ```
 
+
+
+
+
+
+
 ### Step 2: Clone the Model from HuggingFace
 ```bash
 git lfs install
