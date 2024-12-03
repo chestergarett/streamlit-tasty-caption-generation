@@ -1,4 +1,4 @@
-/* styles.css */
+/* Tooltip styling */
 .tooltip {
     display: inline-block;
     position: relative;
@@ -18,7 +18,7 @@
     bottom: 125%; /* Position above */
     left: 50%;
     margin-left: -75px;
-    width: 180px;
+    width: 250px;
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -28,7 +28,52 @@
     opacity: 1;
 }
 
+/* Inline label styling */
 .inline-label {
     display: flex;
     align-items: center;
+}
+
+/* Floating Support Button */
+.floating-support {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 140px;
+    height: 40px;
+    background-color: #4CAF50; /* Green background */
+    color: white;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    z-index: 10; /* Button z-index */
+}
+
+.floating-support:hover {
+    background-color: #45a049;
+    transform: translateY(-5px);
+}
+
+/* Tooltip for Support Button */
+.floating-support:hover::after {
+    content: "Need help? Contact Benedict or Chester in Signal.";
+    position: absolute;
+    bottom: 50px; /* Position above the button */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    z-index: 9999; /* Ensure the tooltip is always on top */
+    opacity: 1;
+    transition: opacity 0.3s;
+    margin-left: -86px;
 }
