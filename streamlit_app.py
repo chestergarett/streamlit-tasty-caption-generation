@@ -4,9 +4,17 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from transformers.generation.streamers import BaseStreamer
 from peft import PeftModel
 
+# --- Load External CSS ---
+def load_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Load the CSS file
+load_css("styles.css")
+
 # --- Constants ---
 MODEL_NAME = "unsloth/Meta-Llama-3.1-8B-Instruct"
-NEW_MODEL = "Benchoonngg/Tasty-Unsloth-Llama-3.1-8B-v4"
+NEW_MODEL = "Llama-3-8B-Caption-RAG"
 
 # Alpaca prompt template
 alpaca_prompt = """Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
@@ -29,6 +37,37 @@ else:
     st.error("No GPU found. Using CPU instead.")
 
 # --- Utility Functions ---
+@st.cache_resource
+def load_model():
+    """
+    Load the tokenizer and model, and ensure both are on the same device.
+    """
+
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16
+    )
+
+    tokenizer = AutoTokenizer.from_pretrained(NEW_MODEL)
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_NAME,
+        torch_dtype=torch.float16 if device.type == "cuda" else torch.float32
+    )
+
+    # Resize token embeddings to match the tokenizer
+    model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
+
+    # Load the Peft model (adapter) on top of the base model
+    model = PeftModel.from_pretrained(model, NEW_MODEL)
+
+    # Merge the adapter layers into the base model and unload them
+    model = model.merge_and_unload()
+
+    model = model.to(device)  # Move the model to the correct device
+
+    return model, tokenizer
+
+# Load model and tokenizer
+model, tokenizer = load_model()
 
 # --- Custom Streamlit Streamer ---
 class StreamlitTextStreamer(BaseStreamer):
@@ -55,14 +94,95 @@ class StreamlitTextStreamer(BaseStreamer):
 # --- Streamlit App ---
 st.title("Llama 3.1 Caption Generator with GPU Support")
 
+# Input fields in the main section
 instruction = st.text_input("Enter Instruction:", "Generate a Holiday Caption.")
-input_text = st.text_area("Enter Context:", "Describe a Holiday Caption in a 4th of July content.")
-max_length = st.slider("Max Output Length:", min_value=128, max_value=1024, value=256)
+input_text = st.text_area("Enter Context:", "Tite Tite")
 
-if st.button("Generate Caption"):
+# Function to reset all sliders to default values
+def reset_to_defaults():
+    for key, value in default_settings.items():
+        st.session_state[key] = value
+
+# Sidebar for settings
+with st.sidebar:
+    st.header("Generation Settings")
+
+    # Default values
+    default_settings = {
+        "num_captions": 1,
+        "max_length": 1024,
+        "temperature": 0.90,
+        "top_k": 50,
+        "top_p": 0.90
+    }
+
+    # Initialize session state for sliders
+    for key, value in default_settings.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+    # Number of Captions Slider
+    st.markdown(
+        "<div class='inline-label'>Total Captions<div class='tooltip'>❔"
+        "<span class='tooltiptext'>Select the number of captions to generate (up to 20).</span>"
+        "</div></div>", unsafe_allow_html=True)
+    st.slider(
+        "", min_value=1, max_value=20,
+        key="num_captions"
+    )
+
+    # Maximum Output Length Slider
+    st.markdown(
+        "<div class='inline-label'>Max Tokens<div class='tooltip'>❔"
+        "<span class='tooltiptext'>Determines the maximum length of the generated caption.</span>"
+        "</div></div>", unsafe_allow_html=True)
+    st.select_slider(
+        "", options=[256, 512, 1024],
+        key="max_length"
+    )
+
+    # Temperature Slider
+    st.markdown(
+        "<div class='inline-label'>Temperature<div class='tooltip'>❔"
+        "<span class='tooltiptext'>Controls randomness. Lower values make output more focused, higher values make it more diverse.</span>"
+        "</div></div>", unsafe_allow_html=True)
+    st.slider(
+        "", min_value=0.0, max_value=1.5,
+        step=0.10, key="temperature"
+    )
+
+    # Top-K Sampling Slider
+    st.markdown(
+        "<div class='inline-label'>Top-K<div class='tooltip'>❔"
+        "<span class='tooltiptext'>Limits sampling to the top K tokens. Smaller values make it more deterministic.</span>"
+        "</div></div>", unsafe_allow_html=True)
+    st.slider(
+        "", min_value=0, max_value=100,
+        step=10,key="top_k"
+    )
+
+    # Top-P Sampling Slider
+    st.markdown(
+        "<div class='inline-label'>Top-P<div class='tooltip'>❔"
+        "<span class='tooltiptext'>Limits sampling to top P probability mass. Lower values focus on high-probability tokens.</span>"
+        "</div></div>", unsafe_allow_html=True)
+    st.slider(
+        "", min_value=0.0, max_value=1.0,
+        step=0.10, key="top_p"
+    )
+
+    # Add spacer for better organization
+    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+
+    # Default Settings Button at the Bottom
+    st.button("Default Settings", on_click=reset_to_defaults)
+
+# Generate button in the main section
+if st.button("Generate Captions"):
     if not instruction.strip() or not input_text.strip():
         st.error("Instruction and context cannot be empty.")
     else:
+        st.write(f"Generating {num_captions} captions...")
         prompt = alpaca_prompt.format(instruction, input_text, "")
 
         # Initialize generator and ensure it runs on the GPU
@@ -72,20 +192,24 @@ if st.button("Generate Caption"):
             tokenizer=tokenizer, 
             device=0  # Explicitly set to GPU device 0
         )
-        output_placeholder = st.empty()  # Placeholder for dynamic updates
 
-        # Custom real-time caption generation logic
-        current_output = ""
-        for token in generator(
-            prompt,
-            max_length=max_length,
-            temperature=0.90,
-            top_k=50,
-            top_p=1,
-            do_sample=True,
-            return_full_text=False,  # Stream partial output
-        ):
-            # Extract the text generated so far
-            current_output += token["generated_text"]
-            # Update the Streamlit placeholder in real-time
-            output_placeholder.markdown(f"**{current_output}**")
+        # Generate multiple captions
+        for i in range(num_captions):
+            output_placeholder = st.empty()  # Placeholder for each caption
+            current_output = ""
+            
+            # Generate caption for each iteration
+            for token in generator(
+                prompt,
+                max_length=max_length,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                do_sample=True,
+                return_full_text=False,  # Stream partial output
+            ):
+                # Extract the text generated so far
+                current_output += token["generated_text"]
+            
+            # Display the generated caption
+            output_placeholder.markdown(f"**Caption {i + 1}:** {current_output}")
