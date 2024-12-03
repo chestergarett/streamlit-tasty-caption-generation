@@ -1,6 +1,6 @@
 # Tasty Caption Generation using Llama 3.1 8B
 
-A Streamlit application for generating captions efficiently using a GPU-accelerated pipeline. Follow the steps below to set up and run the project.
+A Streamlit application for generating captions efficiently using a GPU-accelerated pipeline.
 
 ---
 
