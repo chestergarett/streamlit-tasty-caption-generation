@@ -1,19 +1,46 @@
-# 🎈 Blank app template
+# Caption Generation Streamlit
 
-A simple Streamlit app template for you to modify!
+A Streamlit application for generating captions efficiently using a GPU-accelerated pipeline. Follow the steps below to set up and run the project.
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+---
 
-### How to run it on your own machine
+## Prerequisites
 
-1. Install the requirements
+- Python 3.8 or later installed.
+- A **dedicated GPU** is required for optimal performance.
 
-   ```
-   $ pip install -r requirements.txt
-   ```
+---
 
-2. Run the app
+## Installation Instructions
 
-   ```
-   $ streamlit run streamlit_app.py
-   ```
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Benchoonngg/streamlit-tasty-caption-generation.git
+cd streamlit-tasty-caption-generation
+```
+
+
+### Step 2: Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows
+venv\Scripts\activate
+
+# On Mac/Linux
+source venv/bin/activate
+
+### Step 3: Install Streamlit
+pip install streamlit
+
+### Step 4: Install the Correct Dependencies
+Choose your operating system and install the appropriate requirements file:
+pip install -r requirements-windows.txt
+pip install -r requirements-mac.txt
+
+### Step 5: Run the Streamlit App
+Run the application using the following command:
+streamlit run streamlit_app.py
+
+# Note :
+Ensure you have a dedicated GPU installed and configured to leverage CUDA capabilities for caption generation.
