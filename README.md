@@ -1,4 +1,4 @@
-# Tasty Caption Generation
+# Tasty Caption Generation using Llama 3.1 8B
 
 A Streamlit application for generating captions efficiently using a GPU-accelerated pipeline. Follow the steps below to set up and run the project.
 
@@ -25,25 +25,25 @@ git lfs install
 git clone https://huggingface.co/Benchoonngg/Tasty-Unsloth-Llama-3.1-8B-v4
 ```
 
-### Step 2: Create a virtual environment
+### Step 3: Create a virtual environment
 ```bash
 python -m venv venv
 ```
 
-# Activate the virtual environment
-# On Windows
+### Activate the virtual environment
+### On Windows
 ```bash
 venv\Scripts\activate
 ```
-# On Mac/Linux
+### On Mac/Linux
 ```bash
 source venv/bin/activate
 ```
-### Step 3: Install Streamlit
+### Step 4: Install Streamlit
 ```bash
 pip install streamlit
 ```
-### Step 4: Install the Correct Dependencies
+### Step 5: Install the Correct Dependencies
 Choose your operating system and install the appropriate requirements file:
 ```bash
 pip install -r requirements-windows.txt
@@ -52,11 +52,11 @@ pip install -r requirements-windows.txt
 pip install -r requirements-mac.txt
 ```
 
-### Step 5: Run the Streamlit App
+### Step 6: Run the Streamlit App
 Run the application using the following command:
 ```bash
 streamlit run streamlit_app.py
 ```
 
-# Note :
+## Note :
 Ensure you have a dedicated GPU installed and configured to leverage CUDA capabilities for caption generation.
