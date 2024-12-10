@@ -22,7 +22,7 @@ def load_css(file_name):
 load_css("styles.css")
 
 # --- Constants ---
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/chestergarettcalingacion/Documents/python_projects/caption-generation/credentials.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials.json"
 # Define the required scope
 scope = "https://www.googleapis.com/auth/cloud-platform"
 
