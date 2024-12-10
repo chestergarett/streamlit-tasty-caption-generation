@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
-ENDPOINT_ID = os.getenv("ENDPOINT_ID")
-PROJECT_ID = os.getenv("PROJECT_ID")
-ENDPOINT_REGION = os.getenv("ENDPOINT_REGION")
+# ENDPOINT_ID = os.getenv("ENDPOINT_ID")
+# PROJECT_ID = os.getenv("PROJECT_ID")
+# ENDPOINT_REGION = os.getenv("ENDPOINT_REGION")
 
 
 # --- Load External CSS ---
@@ -22,13 +22,13 @@ def load_css(file_name):
 load_css("styles.css")
 
 # --- Constants ---
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials.json"
 # Define the required scope
 scope = "https://www.googleapis.com/auth/cloud-platform"
+service_account_info = st.secrets["credentials"]
 
 # Load the service account credentials
-vertex_credentials = service_account.Credentials.from_service_account_file(
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"], scopes=[scope]
+vertex_credentials = service_account.Credentials.from_service_account_info(
+    service_account_info, scopes=[scope]
 )
 
 # Refresh the credentials to get an access token
@@ -51,7 +51,7 @@ alpaca_prompt = """Below is an instruction that describes a task, paired with an
 def generate_caption_from_api(instruction, input_text, max_length, temperature, top_k, top_p):
     """Function to generate caption using API call to Vertex AI."""
     # Define the endpoint URL
-    dedicated_dns = f"https://{ENDPOINT_ID}.{ENDPOINT_REGION}-{PROJECT_ID}.prediction.vertexai.goog/v1/projects/{PROJECT_ID}/locations/asia-southeast1/endpoints/{ENDPOINT_ID}:predict"
+    dedicated_dns = f"https://{st.secrets.ENDPOINT_ID}.{st.secrets.ENDPOINT_REGION}-{st.secrets.PROJECT_ID}.prediction.vertexai.goog/v1/projects/{st.secrets.PROJECT_ID}/locations/asia-southeast1/endpoints/{st.secrets.ENDPOINT_ID}:predict"
 
     # Prepare the input data in the required format
     instances = [
