@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
-# ENDPOINT_ID = os.getenv("ENDPOINT_ID")
-# PROJECT_ID = os.getenv("PROJECT_ID")
-# ENDPOINT_REGION = os.getenv("ENDPOINT_REGION")
+#ENDPOINT_ID = ""
+#PROJECT_ID = ""
+#ENDPOINT_REGION = ""
 
 
 # --- Load External CSS ---
@@ -47,18 +47,17 @@ alpaca_prompt = """Below is an instruction that describes a task, paired with an
 ### Response:
 {}"""
 
-# --- Utility Functions ---
 def generate_caption_from_api(instruction, input_text, max_length, temperature, top_k, top_p):
     """Function to generate caption using API call to Vertex AI."""
     # Define the endpoint URL
-    dedicated_dns = f"https://{st.secrets.ENDPOINT_ID}.{st.secrets.ENDPOINT_REGION}-{st.secrets.PROJECT_ID}.prediction.vertexai.goog/v1/projects/{st.secrets.PROJECT_ID}/locations/asia-southeast1/endpoints/{st.secrets.ENDPOINT_ID}:predict"
+    dedicated_dns = f"https://{ENDPOINT_REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{ENDPOINT_REGION}/endpoints/{ENDPOINT_ID}:predict"
 
     # Prepare the input data in the required format
     instances = [
         {
             "inputs": alpaca_prompt.format(instruction, input_text, ""),
             "parameters": {
-                "max_length": max_length,
+                "max_tokens": max_length,
                 "temperature": temperature,
                 "top_k": top_k,
                 "top_p": top_p
@@ -107,7 +106,7 @@ def main():
                     response = generate_caption_from_api(
                         instruction,
                         input_text,
-                        st.session_state["max_length"],
+                        st.session_state["max_tokens"],
                         st.session_state["temperature"],
                         st.session_state["top_k"],
                         st.session_state["top_p"]
@@ -123,7 +122,7 @@ def main():
         st.header("Generation Settings")
         default_settings = {
             "num_captions": 1,
-            "max_length": 1024,
+            "max_tokens": 1024,
             "temperature": 0.90,
             "top_k": 50,
             "top_p": 0.90
@@ -136,7 +135,7 @@ def main():
 
         # Sliders and inputs for settings
         st.slider("Number of Captions", min_value=1, max_value=5, key="num_captions")
-        st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length")
+        st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_tokens")
         st.slider("Temperature", min_value=0.0, max_value=1.5, step=0.10, key="temperature")
         st.slider("Top-K", min_value=0, max_value=100, step=10, key="top_k")
         st.slider("Top-P", min_value=0.0, max_value=1.0, step=0.10, key="top_p")
