@@ -51,23 +51,32 @@ alpaca_prompt = """Below is an instruction that describes a task, paired with an
 def generate_caption_from_api(instruction, input_text, max_length, temperature, top_k, top_p):
     """Function to generate caption using API call to Vertex AI."""
     # Define the endpoint URL
-    dedicated_dns = f"https://{st.secrets.ENDPOINT_ID}.{st.secrets.ENDPOINT_REGION}-{st.secrets.PROJECT_ID}.prediction.vertexai.goog/v1/projects/{st.secrets.PROJECT_ID}/locations/asia-southeast1/endpoints/{st.secrets.ENDPOINT_ID}:predict"
+    url = f"https://{st.secrets['ENDPOINT_DNS']}/v1beta1/{st.secrets['ENDPOINT_RESOURCE_NAME']}/chat/completions"
 
     # Prepare the input data in the required format
-    instances = [
-        {
-            "inputs": alpaca_prompt.format(instruction, input_text, ""),
-            "parameters": {
-                "max_length": max_length,
-                "temperature": temperature,
-                "top_k": top_k,
-                "top_p": top_p
-            }
-        }
-    ]
+    # instances = [
+    #     {
+    #         "inputs": alpaca_prompt.format(instruction, input_text, ""),
+    #         "parameters": {
+    #             "max_tokens": max_length,
+    #             "temperature": temperature,
+    #             "top_k": top_k,
+    #             "top_p": top_p
+    #         }
+    #     }
+    # ]
 
-    print('instances', instances)
-    payload = {"instances": instances}
+    payload = {
+        "messages": [{"role": "user", "content": alpaca_prompt.format(instruction, input_text, "")}],
+        "max_tokens": max_length,
+        "temperature": temperature,
+        "top_p": top_p,
+        "stream": True,
+    }
+
+
+    # print('instances', instances)
+    # payload = {"instances": instances}
 
     # Set the request headers with the access token
     headers = {
@@ -76,14 +85,34 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
     }
 
     # Send the POST request to the API
-    response = requests.post(dedicated_dns, headers=headers, data=json.dumps(payload))
+    response = requests.post(
+        url, headers={"Authorization": f"Bearer {access_token}"}, json=payload, stream=True
+    )
 
     # Check the response
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error(f"Error {response.status_code}: {response.text}")
-        return None
+    # if response.status_code == 200:
+    #     return response.json()
+    # else:
+    #     st.error(f"Error {response.status_code}: {response.text}")
+    #     return None
+    
+    if not response.ok:
+        raise ValueError(response.text)
+
+    result = []  # List to accumulate the chunks
+    for chunk in response.iter_lines(chunk_size=8192, decode_unicode=False):
+        if chunk:
+            chunk = chunk.decode("utf-8").removeprefix("data:").strip()
+            if chunk == "[DONE]":
+                break
+            data = json.loads(chunk)
+            if type(data) is not dict or "error" in data:
+                raise ValueError(data)
+            delta = data["choices"][0]["delta"].get("content")
+            if delta:
+                result.append(delta)  # Accumulate the chunks
+    full_result = ''.join(result)
+    return full_result
 
 # Main Streamlit App
 def main():
@@ -113,10 +142,8 @@ def main():
                         st.session_state["top_p"]
                     )
                     
-                    print('response', response)
                     if response:
-                        generated_caption = response.get("predictions", [])[0]
-                        st.write(f"**Caption {i + 1}:** {generated_caption}")
+                        st.write(f"**Caption {i + 1}:** {response}")
 
     # Generation Settings in Sidebar
     with st.sidebar:
