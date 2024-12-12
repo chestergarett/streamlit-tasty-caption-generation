@@ -162,7 +162,7 @@ def main():
                 st.session_state[key] = value
 
         # Sliders and inputs for settings
-        st.slider("Number of Captions", min_value=1, max_value=5, key="num_captions")
+        st.slider("Number of Captions", min_value=1, max_value=50, key="num_captions")
         st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length")
         st.slider("Temperature", min_value=0.0, max_value=1.5, step=0.10, key="temperature")
         st.slider("Top-K", min_value=0, max_value=100, step=10, key="top_k")
