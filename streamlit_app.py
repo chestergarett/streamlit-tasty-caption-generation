@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
-#ENDPOINT_ID = ""
-#PROJECT_ID = ""
-#ENDPOINT_REGION = ""
+# ENDPOINT_ID = os.getenv("ENDPOINT_ID")
+# PROJECT_ID = os.getenv("PROJECT_ID")
+# ENDPOINT_REGION = os.getenv("ENDPOINT_REGION")
 
 
 # --- Load External CSS ---
@@ -47,14 +47,36 @@ alpaca_prompt = """Below is an instruction that describes a task, paired with an
 ### Response:
 {}"""
 
+# --- Utility Functions ---
 def generate_caption_from_api(instruction, input_text, max_length, temperature, top_k, top_p):
     """Function to generate caption using API call to Vertex AI."""
     # Define the endpoint URL
-    dedicated_dns = f"https://{ENDPOINT_REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{ENDPOINT_REGION}/endpoints/{ENDPOINT_ID}:predict"
-    #url = f"https://{st.secrets['ENDPOINT_DNS']}/v1beta1/{st.secrets['ENDPOINT_RESOURCE_NAME']}/chat/completions"
+    url = f"https://{st.secrets['ENDPOINT_DNS']}/v1beta1/{st.secrets['ENDPOINT_RESOURCE_NAME']}/chat/completions"
 
-    print('instances', instances)
-    payload = {"instances": instances}
+    # Prepare the input data in the required format
+    # instances = [
+    #     {
+    #         "inputs": alpaca_prompt.format(instruction, input_text, ""),
+    #         "parameters": {
+    #             "max_tokens": max_length,
+    #             "temperature": temperature,
+    #             "top_k": top_k,
+    #             "top_p": top_p
+    #         }
+    #     }
+    # ]
+
+    payload = {
+        "messages": [{"role": "user", "content": alpaca_prompt.format(instruction, input_text, "")}],
+        "max_tokens": max_length,
+        "temperature": temperature,
+        "top_p": top_p,
+        "stream": True,
+    }
+
+
+    # print('instances', instances)
+    # payload = {"instances": instances}
 
     # Set the request headers with the access token
     headers = {
@@ -62,10 +84,18 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
         "Content-Type": "application/json"
     }
 
+    # Send the POST request to the API
     response = requests.post(
         url, headers={"Authorization": f"Bearer {access_token}"}, json=payload, stream=True
     )
 
+    # Check the response
+    # if response.status_code == 200:
+    #     return response.json()
+    # else:
+    #     st.error(f"Error {response.status_code}: {response.text}")
+    #     return None
+    
     if not response.ok:
         raise ValueError(response.text)
 
@@ -112,10 +142,8 @@ def main():
                         st.session_state["top_p"]
                     )
                     
-                    print('response', response)
                     if response:
-                        generated_caption = response.get("predictions", [])[0]
-                        st.write(f"**Caption {i + 1}:** {generated_caption}")
+                        st.write(f"**Caption {i + 1}:** {response}")
 
     # Generation Settings in Sidebar
     with st.sidebar:
@@ -134,7 +162,7 @@ def main():
                 st.session_state[key] = value
 
         # Sliders and inputs for settings
-        st.slider("Number of Captions", min_value=1, max_value=5, key="num_captions")
+        st.slider("Number of Captions", min_value=1, max_value=100, key="num_captions")
         st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length")
         st.slider("Temperature", min_value=0.0, max_value=1.5, step=0.10, key="temperature")
         st.slider("Top-K", min_value=0, max_value=100, step=10, key="top_k")
