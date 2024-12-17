@@ -1,8 +1,7 @@
 Llama-3-8B-Caption-RAG
-groovy-legacy-438407-u5-d3dc40f8cae6.json
-.streamlit/secrets.toml
-groovy-legacy-438407-u5-efc1f6f88b21.json
 merged_model.mar
+.streamlit/secrets.toml
+ignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
