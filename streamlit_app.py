@@ -8,10 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
-# ENDPOINT_ID = os.getenv("ENDPOINT_ID")
-# PROJECT_ID = os.getenv("PROJECT_ID")
-# ENDPOINT_REGION = os.getenv("ENDPOINT_REGION")
-
 
 # --- Load External CSS ---
 def load_css(file_name):
@@ -53,19 +49,6 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
     # Define the endpoint URL
     url = f"https://{st.secrets['ENDPOINT_DNS']}/v1beta1/{st.secrets['ENDPOINT_RESOURCE_NAME']}/chat/completions"
 
-    # Prepare the input data in the required format
-    # instances = [
-    #     {
-    #         "inputs": alpaca_prompt.format(instruction, input_text, ""),
-    #         "parameters": {
-    #             "max_tokens": max_length,
-    #             "temperature": temperature,
-    #             "top_k": top_k,
-    #             "top_p": top_p
-    #         }
-    #     }
-    # ]
-
     payload = {
         "messages": [{"role": "user", "content": alpaca_prompt.format(instruction, input_text, "")}],
         "max_tokens": max_length,
@@ -74,11 +57,6 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
         "stream": True,
     }
 
-
-    # print('instances', instances)
-    # payload = {"instances": instances}
-
-    # Set the request headers with the access token
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
@@ -89,12 +67,6 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
         url, headers={"Authorization": f"Bearer {access_token}"}, json=payload, stream=True
     )
 
-    # Check the response
-    # if response.status_code == 200:
-    #     return response.json()
-    # else:
-    #     st.error(f"Error {response.status_code}: {response.text}")
-    #     return None
     
     if not response.ok:
         raise ValueError(response.text)
