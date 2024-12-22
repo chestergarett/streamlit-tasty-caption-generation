@@ -28,12 +28,12 @@ def check_credentials(username, password):
         return False
 
 def login_page():
-    
-    # Initialize session state for authentication
+    """Display login page and handle authentication"""
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
+        st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             username = st.text_input("Username")
@@ -73,7 +73,7 @@ def load_css(file_name):
 def main():
     # First check login
     if not login_page():
-        st.stop()
+        st.stop()  # Stop execution if not logged in
     
     # Load CSS file
     load_css("styles.css")
@@ -81,18 +81,18 @@ def main():
     # Initialize API credentials after successful login
     access_token = initialize_api_credentials()
     
+    # Streamlit App Title
+    st.markdown(
+        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
+        unsafe_allow_html=True
+    )
+    
     # Welcome message with username
     st.markdown(f"Welcome, {st.session_state.username}!")
     
     # Initialize session state for storing captions if it doesn't exist
     if 'generated_captions' not in st.session_state:
         st.session_state.generated_captions = []
-
-    # Streamlit App Title
-    st.markdown(
-        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
-        unsafe_allow_html=True
-    )
 
     # Main content: Input fields and caption generation
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
