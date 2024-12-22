@@ -163,8 +163,8 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
     ### Response:
     {}"""
 
-    # Define the endpoint URL
-    url = f"https://{st.secrets['ENDPOINT_DNS']}/v1beta1/{st.secrets['ENDPOINT_RESOURCE_NAME']}/chat/completions"
+    # Define the endpoint URL using the endpoints section
+    url = f"https://{st.secrets.endpoints.ENDPOINT_DNS}/v1beta1/{st.secrets.endpoints.ENDPOINT_RESOURCE_NAME}/chat/completions"
 
     payload = {
         "messages": [{"role": "user", "content": alpaca_prompt.format(instruction, input_text, "")}],
