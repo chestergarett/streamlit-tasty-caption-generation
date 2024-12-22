@@ -45,7 +45,7 @@ def login_page():
                 if check_credentials(username, password):
                     st.session_state.authenticated = True
                     st.session_state.username = username
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("Invalid username or password")
         return False
