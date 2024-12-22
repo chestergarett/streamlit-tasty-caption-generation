@@ -11,10 +11,21 @@ load_dotenv()
 # --- Authentication Functions ---
 def check_credentials(username, password):
     """Check if username/password combination exists in authorized users"""
-    # Convert username to the format used in secrets
-    secret_key = f"authorized_users_{username}"
-    # Check if user exists and password matches
-    return secret_key in st.secrets and st.secrets[secret_key] == password
+    try:
+        # Debug: Print all available secrets keys
+        st.write("Available secrets:", st.secrets.keys())
+        
+        # Debug: Print authorized users section
+        if 'authorized_users' in st.secrets:
+            st.write("Authorized users:", st.secrets.authorized_users)
+        
+        # Check if username exists and password matches
+        if username in st.secrets.authorized_users:
+            return st.secrets.authorized_users[username] == password
+        return False
+    except Exception as e:
+        st.error(f"Debug - Error in check_credentials: {str(e)}")
+        return False
 
 def login_page():
     """Display login page and handle authentication"""
@@ -44,21 +55,7 @@ def initialize_api_credentials():
     """Initialize API credentials after successful login"""
     # Define the required scope
     scope = "https://www.googleapis.com/auth/cloud-platform"
-    
-    # Reconstruct service account info from flattened secrets
-    service_account_info = {
-        "type": st.secrets["credentials_type"],
-        "project_id": st.secrets["credentials_project_id"],
-        "private_key_id": st.secrets["credentials_private_key_id"],
-        "private_key": st.secrets["credentials_private_key"],
-        "client_email": st.secrets["credentials_client_email"],
-        "client_id": st.secrets["credentials_client_id"],
-        "auth_uri": st.secrets["credentials_auth_uri"],
-        "token_uri": st.secrets["credentials_token_uri"],
-        "auth_provider_x509_cert_url": st.secrets["credentials_auth_provider_x509_cert_url"],
-        "client_x509_cert_url": st.secrets["credentials_client_x509_cert_url"],
-        "universe_domain": st.secrets["credentials_universe_domain"]
-    }
+    service_account_info = st.secrets["credentials"]
 
     # Load the service account credentials
     vertex_credentials = service_account.Credentials.from_service_account_info(
