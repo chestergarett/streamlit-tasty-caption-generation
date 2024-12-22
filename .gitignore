@@ -4,6 +4,7 @@ merged_model.mar
 .secrets.toml
 ignore
 connections.py
+.streamlit/config.toml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

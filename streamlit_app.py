@@ -8,6 +8,35 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
+# --- Authentication Functions ---
+def check_credentials(username, password):
+    """Check if username/password combination exists in authorized users"""
+    authorized_users = st.secrets["authorized_users"]
+    return username in authorized_users and authorized_users[username] == password
+
+def login_page():
+    """Display login page and handle authentication"""
+    st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
+    
+    # Initialize session state for authentication
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    
+    if not st.session_state.authenticated:
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            
+            if st.button("Login"):
+                if check_credentials(username, password):
+                    st.session_state.authenticated = True
+                    st.session_state.username = username
+                    st.experimental_rerun()
+                else:
+                    st.error("Invalid username or password")
+        return False
+    return True
 
 # --- Load External CSS ---
 def load_css(file_name):
@@ -88,6 +117,12 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
 
 # Main Streamlit App
 def main():
+    if not login_page():
+        st.stop()
+    
+    # Welcome message with username
+    st.markdown(f"Welcome, {st.session_state.username}!")
+    
     # Initialize session state for storing captions if it doesn't exist
     if 'generated_captions' not in st.session_state:
         st.session_state.generated_captions = []
