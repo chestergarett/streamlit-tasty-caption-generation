@@ -28,8 +28,6 @@ def check_credentials(username, password):
         return False
 
 def login_page():
-    """Display login page and handle authentication"""
-    st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
     
     # Initialize session state for authentication
     if 'authenticated' not in st.session_state:
