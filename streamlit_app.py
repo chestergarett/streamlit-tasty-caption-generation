@@ -88,6 +88,10 @@ def generate_caption_from_api(instruction, input_text, max_length, temperature, 
 
 # Main Streamlit App
 def main():
+    # Initialize session state for storing captions if it doesn't exist
+    if 'generated_captions' not in st.session_state:
+        st.session_state.generated_captions = []
+
     # Streamlit App Title
     st.markdown(
         "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
@@ -98,24 +102,31 @@ def main():
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     if st.button("Generate Captions"):
-            if not instruction.strip() or not input_text.strip():
-                st.error("Instruction and context cannot be empty.")
-            else:
-                st.write(f"Generating {st.session_state['num_captions']} captions...")
+        if not instruction.strip() or not input_text.strip():
+            st.error("Instruction and context cannot be empty.")
+        else:
+            st.write(f"Generating {st.session_state['num_captions']} captions...")
+            # Clear previous captions
+            st.session_state.generated_captions = []
 
-                # Generate captions logic
-                for i in range(st.session_state["num_captions"]):
-                    response = generate_caption_from_api(
-                        instruction,
-                        input_text,
-                        st.session_state["max_length"],
-                        st.session_state["temperature"],
-                        st.session_state["top_k"],
-                        st.session_state["top_p"]
-                    )
-                    
-                    if response:
-                        st.write(f"**Caption {i + 1}:** {response}")
+            # Generate captions logic
+            for i in range(st.session_state["num_captions"]):
+                response = generate_caption_from_api(
+                    instruction,
+                    input_text,
+                    st.session_state["max_length"],
+                    st.session_state["temperature"],
+                    st.session_state["top_k"],
+                    st.session_state["top_p"]
+                )
+                
+                if response:
+                    # Store caption in session state
+                    st.session_state.generated_captions.append(response)
+
+    # Display stored captions
+    for i, caption in enumerate(st.session_state.generated_captions):
+        st.write(f"**Caption {i + 1}:** {caption}")
 
     # Generation Settings in Sidebar
     with st.sidebar:
