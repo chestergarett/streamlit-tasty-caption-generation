@@ -172,9 +172,9 @@ def main():
         # Sliders and inputs for settings
         st.slider("Number of Captions", min_value=1, max_value=100, key="num_captions")
         st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length")
-        st.slider("Temperature", min_value=0.0, max_value=1.5, step=0.10, key="temperature")
-        st.slider("Top-K", min_value=0, max_value=100, step=10, key="top_k")
-        st.slider("Top-P", min_value=0.0, max_value=1.0, step=0.10, key="top_p")
+        st.slider("Temperature", min_value=0.1, max_value=1.5, step=0.10, key="temperature")
+        st.slider("Top-K", min_value=10, max_value=100, step=10, key="top_k")
+        st.slider("Top-P", min_value=0.1, max_value=1.0, step=0.10, key="top_p")
 
 def generate_caption_from_api(
     instruction: str,
