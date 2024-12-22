@@ -1,7 +1,9 @@
 Llama-3-8B-Caption-RAG
 merged_model.mar
 .streamlit/secrets.toml
+.secrets.toml
 ignore
+connections.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
