@@ -5,6 +5,7 @@ import json
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from dotenv import load_dotenv 
+from constants import context_sample_guide
 
 load_dotenv() 
 
@@ -86,9 +87,13 @@ def initialize_session_state():
         if key not in st.session_state:
             st.session_state[key] = value
 
+    return defaults
+            
+    
+
 def add_logout_button():
     """Add a logout button to the sidebar"""
-    if st.sidebar.button("Logout"):
+    if st.button("Logout"):
         for key in st.session_state.keys():
             del st.session_state[key]
         st.rerun()
@@ -96,14 +101,19 @@ def add_logout_button():
 # Main Streamlit App
 def main():
     # Initialize session state
-    initialize_session_state()
+    defaults = initialize_session_state()
+    
+    default_settings = {
+            "num_captions": defaults['num_captions'],
+            "max_length": defaults['max_length'],
+            "temperature": defaults['temperature'],
+            "top_k": defaults['top_k'],
+            "top_p": defaults['top_p']
+        }
     
     # First check login
     if not login_page():
         st.stop()  # Stop execution if not logged in
-    
-    # Add logout button to sidebar
-    add_logout_button()
     
     # Load CSS file
     load_css("styles.css")
@@ -119,9 +129,35 @@ def main():
     
     # Welcome message with username
     st.markdown(f"Welcome, {st.session_state.username}!")
-    
+
+    if 'show_markdown' not in st.session_state:
+        st.session_state.show_markdown = False
+
+    toggle_button = st.button("Show/Hide Sample Guide")
+    if toggle_button:
+        st.session_state.show_markdown = not st.session_state.show_markdown
+
+    # Display markdown content if the button is clicked
+    if st.session_state.show_markdown:
+        st.markdown(context_sample_guide)
+
     # Main content: Input fields and caption generation
-    instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
+    instruction_options = [
+        "Tip Me",
+        "Winner",
+        "Holiday",
+        "Bundle",
+        "Descriptive",
+        "Spin the Wheel",
+        "Girlfriend",
+        "List",
+        "Short",
+        "Sub Promo",
+        "VIP",
+    ]
+    # Main content: Input fields and caption generation
+    selected_option = st.selectbox("Select Category:", options=instruction_options, )
+    instruction = f"Generate a {selected_option} caption"
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     
     if st.button("Generate Captions"):
@@ -156,13 +192,18 @@ def main():
     # Generation Settings in Sidebar
     with st.sidebar:
         st.header("Generation Settings")
-        default_settings = {
-            "num_captions": 1,
-            "max_length": 1024,
-            "temperature": 0.90,
-            "top_k": 50,
-            "top_p": 0.90
-        }
+
+        # Generation Settings in Sidebar
+        col1, col2 = st.columns(2)
+    
+        with col1:
+            if st.button("Reset"):
+                for key, value in default_settings.items():
+                    st.session_state[key] = value
+
+            # Add logout button to sidebar
+        with col2:
+            add_logout_button()
 
         # Initialize session state for sliders
         for key, value in default_settings.items():
@@ -170,11 +211,11 @@ def main():
                 st.session_state[key] = value
 
         # Sliders and inputs for settings
-        st.slider("Number of Captions", min_value=1, max_value=100, key="num_captions")
-        st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length")
-        st.slider("Temperature", min_value=0.1, max_value=1.5, step=0.10, key="temperature")
-        st.slider("Top-K", min_value=10, max_value=100, step=10, key="top_k")
-        st.slider("Top-P", min_value=0.1, max_value=1.0, step=0.10, key="top_p")
+        st.slider("Number of Captions", min_value=1, max_value=100, key="num_captions", help="The number of captions to generate.")
+        st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length", help="The maximum number of tokens (words or pieces of words) to include in the generated text.")
+        st.slider("Temperature", min_value=0.1, max_value=1.5, step=0.10, key="temperature",  help="Controls the randomness of predictions.")
+        st.slider("Top-K", min_value=10, max_value=100, step=10, key="top_k", help="Lower values limit options to the most common words, higher values include less common words for variety.")
+        st.slider("Top-P", min_value=0.1, max_value=1.0, step=0.10, key="top_p", help="Lower values stick to safer word choices, higher values add more variety.")
 
 def generate_caption_from_api(
     instruction: str,
