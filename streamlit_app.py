@@ -81,7 +81,9 @@ def initialize_session_state():
             st.session_state[key] = value
 
 def add_logout_button():
-    """Add a logout button to the sidebar"""
+    """Add a logout button to the bottom of the sidebar"""
+    # Create empty space to push the button to the bottom
+    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         for key in st.session_state.keys():
             del st.session_state[key]
@@ -95,9 +97,6 @@ def main():
     # First check login
     if not login_page():
         st.stop()  # Stop execution if not logged in
-    
-    # Add logout button to sidebar
-    add_logout_button()
     
     # Load CSS file
     load_css("styles.css")
@@ -220,6 +219,9 @@ def main():
             step=0.10, 
             key="top_p"
         )
+
+    # Add logout button at the bottom of sidebar
+    add_logout_button()
 
 def generate_caption_from_api(
     instruction: str,
