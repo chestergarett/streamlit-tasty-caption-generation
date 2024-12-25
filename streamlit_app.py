@@ -83,7 +83,7 @@ def initialize_session_state():
 def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
     # Create empty space to push the button to the bottom
-    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="height: 10vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         for key in st.session_state.keys():
             del st.session_state[key]
