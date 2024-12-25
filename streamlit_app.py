@@ -30,7 +30,7 @@ def login_page():
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+            password = st.text_input("Password", type="password", autocomplete="off")
             
             if st.button("Login"):
                 if check_credentials(username, password):
