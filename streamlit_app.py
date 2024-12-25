@@ -190,6 +190,37 @@ def main():
             key="top_p"
         )
 
+        # Add template buttons
+        st.markdown("### Templates")
+        col1, col2, col3 = st.columns(3)
+        
+        # Default Template
+        if col1.button("Default"):
+            st.session_state.num_captions = 1
+            st.session_state.max_length = 1024
+            st.session_state.temperature = 0.90
+            st.session_state.top_k = 50
+            st.session_state.top_p = 0.90
+            st.rerun()
+        
+        # Template 2
+        if col2.button("Template 2"):
+            st.session_state.num_captions = 1
+            st.session_state.max_length = 1024
+            st.session_state.temperature = 1.20
+            st.session_state.top_k = 80
+            st.session_state.top_p = 0.40
+            st.rerun()
+        
+        # Template 3
+        if col3.button("Template 3"):
+            st.session_state.num_captions = 1
+            st.session_state.max_length = 1024
+            st.session_state.temperature = 1.30
+            st.session_state.top_k = 90
+            st.session_state.top_p = 0.50
+            st.rerun()
+
 def generate_caption_from_api(
     instruction: str,
     input_text: str,
