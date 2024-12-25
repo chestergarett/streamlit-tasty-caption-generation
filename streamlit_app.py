@@ -29,8 +29,8 @@ def login_page():
         st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+            username = st.text_input("Username", autocomplete="off")
+            password = st.text_input("Password", type="password", autocomplete="off")
             
             if st.button("Login"):
                 if check_credentials(username, password):
@@ -150,6 +150,37 @@ def main():
     # Generation Settings in Sidebar
     with st.sidebar:
         st.header("Generation Settings")
+        
+        # Add template buttons first
+        st.markdown("### Templates")
+        col1, col2, col3 = st.columns(3)
+        
+        # Default Template
+        if col1.button("Default"):
+            st.session_state["num_captions"] = 1
+            st.session_state["max_length"] = 1024
+            st.session_state["temperature"] = 0.90
+            st.session_state["top_k"] = 50
+            st.session_state["top_p"] = 0.90
+            st.rerun()
+        
+        # Template 2
+        if col2.button("Template 2"):
+            st.session_state["num_captions"] = 1
+            st.session_state["max_length"] = 1024
+            st.session_state["temperature"] = 1.20
+            st.session_state["top_k"] = 80
+            st.session_state["top_p"] = 0.40
+            st.rerun()
+        
+        # Template 3
+        if col3.button("Template 3"):
+            st.session_state["num_captions"] = 1
+            st.session_state["max_length"] = 1024
+            st.session_state["temperature"] = 1.30
+            st.session_state["top_k"] = 90
+            st.session_state["top_p"] = 0.50
+            st.rerun()
         
         # Sliders and inputs for settings with default values
         st.slider(
