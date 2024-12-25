@@ -12,19 +12,12 @@ load_dotenv()
 def check_credentials(username, password):
     """Check if username/password combination exists in authorized users"""
     try:
-        # Debug: Print all available secrets keys
-        st.write("Available secrets:", st.secrets.keys())
-        
-        # Debug: Print authorized users section
-        if 'authorized_users' in st.secrets:
-            st.write("Authorized users:", st.secrets.authorized_users)
-        
         # Check if username exists and password matches
         if username in st.secrets.authorized_users:
             return st.secrets.authorized_users[username] == password
         return False
     except Exception as e:
-        st.error(f"Debug - Error in check_credentials: {str(e)}")
+        st.error(f"Error in authentication")
         return False
 
 def login_page():
@@ -82,6 +75,7 @@ def initialize_session_state():
         "top_p": 0.90
     }
     
+    # Only set defaults if they don't exist in session state
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
@@ -156,25 +150,45 @@ def main():
     # Generation Settings in Sidebar
     with st.sidebar:
         st.header("Generation Settings")
-        default_settings = {
-            "num_captions": 1,
-            "max_length": 1024,
-            "temperature": 0.90,
-            "top_k": 50,
-            "top_p": 0.90
-        }
-
-        # Initialize session state for sliders
-        for key, value in default_settings.items():
-            if key not in st.session_state:
-                st.session_state[key] = value
-
-        # Sliders and inputs for settings
-        st.slider("Number of Captions", min_value=1, max_value=100, key="num_captions")
-        st.select_slider("Max Tokens", options=[256, 512, 1024], key="max_length")
-        st.slider("Temperature", min_value=0.1, max_value=1.5, step=0.10, key="temperature")
-        st.slider("Top-K", min_value=10, max_value=100, step=10, key="top_k")
-        st.slider("Top-P", min_value=0.1, max_value=1.0, step=0.10, key="top_p")
+        
+        # Sliders and inputs for settings with default values
+        st.slider(
+            "Number of Captions", 
+            min_value=1, 
+            max_value=100, 
+            value=st.session_state.num_captions,
+            key="num_captions"
+        )
+        st.select_slider(
+            "Max Tokens", 
+            options=[256, 512, 1024], 
+            value=st.session_state.max_length,
+            key="max_length"
+        )
+        st.slider(
+            "Temperature", 
+            min_value=0.0, 
+            max_value=1.5, 
+            value=st.session_state.temperature,
+            step=0.10, 
+            key="temperature"
+        )
+        st.slider(
+            "Top-K", 
+            min_value=0, 
+            max_value=100, 
+            value=st.session_state.top_k,
+            step=10, 
+            key="top_k"
+        )
+        st.slider(
+            "Top-P", 
+            min_value=0.0, 
+            max_value=1.0, 
+            value=st.session_state.top_p,
+            step=0.10, 
+            key="top_p"
+        )
 
 def generate_caption_from_api(
     instruction: str,
