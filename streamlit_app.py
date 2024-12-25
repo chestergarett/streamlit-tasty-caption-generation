@@ -12,19 +12,12 @@ load_dotenv()
 def check_credentials(username, password):
     """Check if username/password combination exists in authorized users"""
     try:
-        # Debug: Print all available secrets keys
-        st.write("Available secrets:", st.secrets.keys())
-        
-        # Debug: Print authorized users section
-        if 'authorized_users' in st.secrets:
-            st.write("Authorized users:", st.secrets.authorized_users)
-        
         # Check if username exists and password matches
         if username in st.secrets.authorized_users:
             return st.secrets.authorized_users[username] == password
         return False
     except Exception as e:
-        st.error(f"Debug - Error in check_credentials: {str(e)}")
+        st.error(f"Error in authentication")
         return False
 
 def login_page():
