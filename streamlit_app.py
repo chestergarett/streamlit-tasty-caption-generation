@@ -42,8 +42,7 @@ def is_valid_token(token: str) -> bool:
 def login_page():
     """Display login page and handle authentication"""
     # Check for existing session token in query parameters
-    query_params = st.experimental_get_query_params()
-    token = query_params.get('token', [None])[0]
+    token = st.query_params.get('token', None)
     
     if token and is_valid_token(token):
         st.session_state.authenticated = True
@@ -68,7 +67,7 @@ def login_page():
                     st.session_state.username = username
                     
                     # Set query parameters with session token
-                    st.experimental_set_query_params(token=token)
+                    st.query_params['token'] = token
                     st.rerun()
                 else:
                     st.error("Invalid username or password")
@@ -118,7 +117,7 @@ def add_logout_button():
     st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         # Clear query parameters
-        st.experimental_set_query_params()
+        st.query_params.clear()
         # Clear session state
         for key in st.session_state.keys():
             del st.session_state[key]
