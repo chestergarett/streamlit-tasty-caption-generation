@@ -94,7 +94,6 @@ def check_password():
                 cookie_manager.set(
                     "tasty_caption_auth", 
                     st.session_state["username"], 
-                    key="login_cookie",
                     expires_at=datetime.datetime.now() + datetime.timedelta(days=30)
                 )
             else:
@@ -113,12 +112,7 @@ def check_password():
         if not st.session_state.password_correct:
             # Clear any existing cookies on failed login
             cookie_manager.delete("tasty_caption_auth")
-            cookie_manager.set(
-                "tasty_caption_auth", 
-                "", 
-                key="clear_cookie",
-                expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
-            )
+            cookie_manager.set("tasty_caption_auth", "", expires_at=datetime.datetime.now())
             st.error("😕 User not known or password incorrect")
         else:
             return True
@@ -171,7 +165,6 @@ def add_logout_button():
         cookie_manager.set(
             "tasty_caption_auth", 
             "", 
-            key="logout_cookie",
             expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
         )
         
@@ -188,7 +181,7 @@ def add_logout_button():
         cookie_manager.set(
             "tasty_caption_auth",
             "",
-            key="final_logout",  # Different key for final cookie clear
+            key="logout_cookie",  # Added unique key
             expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
         )
         
