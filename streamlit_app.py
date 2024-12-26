@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import hashlib
 import time
 import hmac
+import extra_streamlit_components as stx
+import datetime
 
 load_dotenv() 
 
@@ -18,6 +20,11 @@ if 'username' not in st.session_state:
     st.session_state.username = None
 if 'password_correct' not in st.session_state:
     st.session_state.password_correct = False
+
+def get_manager():
+    return stx.CookieManager()
+
+cookie_manager = get_manager()
 
 # --- Authentication Functions ---
 def check_credentials(username, password):
@@ -50,6 +57,14 @@ def is_valid_token(token: str) -> bool:
 
 def check_password():
     """Returns `True` if the user had the correct password."""
+    
+    # Check if authentication cookie exists
+    cookie_name = "tasty_caption_auth"
+    if cookie_manager.get(cookie_name):
+        stored_username = cookie_manager.get(cookie_name)
+        st.session_state.authenticated = True
+        st.session_state.username = stored_username
+        return True
 
     def login_form():
         """Form with widgets to collect user information"""
@@ -72,6 +87,12 @@ def check_password():
                 del st.session_state["password"]
                 # Store username in session state
                 st.session_state["username"] = st.session_state["username"]
+                # Set authentication cookie
+                cookie_manager.set(
+                    "tasty_caption_auth", 
+                    st.session_state["username"], 
+                    expires_at=datetime.datetime.now() + datetime.timedelta(days=30)
+                )
             else:
                 st.session_state["password_correct"] = False
                 st.session_state["authenticated"] = False
@@ -133,6 +154,8 @@ def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
     st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
+        # Clear cookie
+        cookie_manager.delete("tasty_caption_auth")
         # Clear session state
         st.session_state.authenticated = False
         st.session_state.username = None
