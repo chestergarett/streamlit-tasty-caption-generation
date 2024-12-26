@@ -152,34 +152,17 @@ def main():
         
         # Add template buttons first
         st.markdown("### Templates")
+        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+        
         col1, col2, col3 = st.columns(3)
+        with col1:
+            st.button("Default")
+        with col2:
+            st.button("Template 2")
+        with col3:
+            st.button("Template 3")
         
-        # Default Template
-        if col1.button("Default"):
-            st.session_state["num_captions"] = 1
-            st.session_state["max_length"] = 1024
-            st.session_state["temperature"] = 0.90
-            st.session_state["top_k"] = 50
-            st.session_state["top_p"] = 0.90
-            st.rerun()
-        
-        # Template 2
-        if col2.button("Template 2"):
-            st.session_state["num_captions"] = 1
-            st.session_state["max_length"] = 1024
-            st.session_state["temperature"] = 1.20
-            st.session_state["top_k"] = 80
-            st.session_state["top_p"] = 0.40
-            st.rerun()
-        
-        # Template 3
-        if col3.button("Template 3"):
-            st.session_state["num_captions"] = 1
-            st.session_state["max_length"] = 1024
-            st.session_state["temperature"] = 1.30
-            st.session_state["top_k"] = 90
-            st.session_state["top_p"] = 0.50
-            st.rerun()
+        st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
         
         # Sliders and inputs for settings with tooltips
         st.slider(
@@ -190,6 +173,8 @@ def main():
             key="num_captions",
             help="Controls how many different captions to generate. Higher values will generate more variations but take longer."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.select_slider(
             "Max Tokens ℹ️", 
             options=[256, 512, 1024], 
@@ -197,6 +182,8 @@ def main():
             key="max_length",
             help="Maximum length of the generated caption in tokens. Higher values allow for longer captions but may increase generation time."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.slider(
             "Temperature ℹ️", 
             min_value=0.0, 
@@ -206,6 +193,8 @@ def main():
             key="temperature",
             help="Controls randomness in the generation. Higher values (e.g., 1.0) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.slider(
             "Top-K ℹ️", 
             min_value=0, 
@@ -215,6 +204,8 @@ def main():
             key="top_k",
             help="Limits the cumulative probability of tokens considered for generation. Only the top K most likely tokens are considered. Lower values increase focus but may reduce creativity."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.slider(
             "Top-P ℹ️", 
             min_value=0.0, 
