@@ -152,6 +152,8 @@ def main():
         
         # Add template buttons first
         st.markdown("### Templates")
+        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+        
         col1, col2, col3 = st.columns(3)
         
         # Default Template
@@ -181,43 +183,58 @@ def main():
             st.session_state["top_p"] = 0.50
             st.rerun()
         
-        # Sliders and inputs for settings with default values
+        st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+        
+        # Sliders and inputs for settings with tooltips
         st.slider(
             "Number of Captions", 
             min_value=1, 
             max_value=100, 
             value=st.session_state.num_captions,
-            key="num_captions"
+            key="num_captions",
+            help="Controls how many different captions to generate. Higher values will generate more variations but take longer."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.select_slider(
             "Max Tokens", 
             options=[256, 512, 1024], 
             value=st.session_state.max_length,
-            key="max_length"
+            key="max_length",
+            help="Maximum length of the generated caption in tokens. Higher values allow for longer captions but may increase generation time."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.slider(
             "Temperature", 
             min_value=0.0, 
             max_value=1.5, 
             value=st.session_state.temperature,
             step=0.10, 
-            key="temperature"
+            key="temperature",
+            help="Controls randomness in the generation. Higher values (e.g., 1.0) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.slider(
             "Top-K", 
             min_value=0, 
             max_value=100, 
             value=st.session_state.top_k,
             step=10, 
-            key="top_k"
+            key="top_k",
+            help="Limits the cumulative probability of tokens considered for generation. Only the top K most likely tokens are considered. Lower values increase focus but may reduce creativity."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        
         st.slider(
             "Top-P", 
             min_value=0.0, 
             max_value=1.0, 
             value=st.session_state.top_p,
             step=0.10, 
-            key="top_p"
+            key="top_p",
+            help="Also known as nucleus sampling. Controls diversity by considering tokens whose cumulative probability exceeds P. Lower values (0.1) are more focused, higher values (0.9) are more diverse."
         )
 
     # Add logout button at the bottom of sidebar
