@@ -5,6 +5,8 @@ import json
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from dotenv import load_dotenv 
+import hashlib
+import time
 
 load_dotenv() 
 
@@ -20,8 +22,33 @@ def check_credentials(username, password):
         st.error(f"Error in authentication")
         return False
 
+def get_session_token(username: str, password: str) -> str:
+    """Create a session token from username and timestamp"""
+    timestamp = str(int(time.time()))
+    token = f"{username}{password}{timestamp}"
+    return hashlib.sha256(token.encode()).hexdigest()
+
+def is_valid_token(token: str) -> bool:
+    """Validate the session token from query parameters"""
+    if not token:
+        return False
+    try:
+        # Get stored token from session state
+        stored_token = st.session_state.get('session_token')
+        return stored_token == token
+    except Exception:
+        return False
+
 def login_page():
     """Display login page and handle authentication"""
+    # Check for existing session token in query parameters
+    query_params = st.experimental_get_query_params()
+    token = query_params.get('token', [None])[0]
+    
+    if token and is_valid_token(token):
+        st.session_state.authenticated = True
+        return True
+    
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
     
@@ -29,13 +56,19 @@ def login_page():
         st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            username = st.text_input("Username", autocomplete="off")
-            password = st.text_input("Password", type="password", autocomplete="off")
+            username = st.text_input("Username", autocomplete="username")
+            password = st.text_input("Password", type="password", autocomplete="current-password")
             
             if st.button("Login"):
                 if check_credentials(username, password):
+                    # Generate and store session token
+                    token = get_session_token(username, password)
+                    st.session_state.session_token = token
                     st.session_state.authenticated = True
                     st.session_state.username = username
+                    
+                    # Set query parameters with session token
+                    st.experimental_set_query_params(token=token)
                     st.rerun()
                 else:
                     st.error("Invalid username or password")
@@ -82,9 +115,11 @@ def initialize_session_state():
 
 def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
-    # Create empty space to push the button to the bottom
-    st.sidebar.markdown('<div style="height: 0vh;"></div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
+        # Clear query parameters
+        st.experimental_set_query_params()
+        # Clear session state
         for key in st.session_state.keys():
             del st.session_state[key]
         st.rerun()
