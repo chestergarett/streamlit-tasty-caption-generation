@@ -156,10 +156,9 @@ def add_logout_button():
     if st.sidebar.button("Logout"):
         # Clear cookie
         cookie_manager.delete("tasty_caption_auth")
-        # Clear session state
-        st.session_state.authenticated = False
-        st.session_state.username = None
-        st.session_state.password_correct = False
+        # Clear all session state
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
         # Force a rerun to update the UI
         st.rerun()
 
