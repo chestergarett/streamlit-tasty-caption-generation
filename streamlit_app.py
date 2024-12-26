@@ -11,6 +11,14 @@ import hmac
 
 load_dotenv() 
 
+# Initialize session state variables
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+if 'username' not in st.session_state:
+    st.session_state.username = None
+if 'password_correct' not in st.session_state:
+    st.session_state.password_correct = False
+
 # --- Authentication Functions ---
 def check_credentials(username, password):
     """Check if username/password combination exists in authorized users"""
@@ -59,22 +67,28 @@ def check_password():
                 st.secrets.authorized_users[st.session_state["username"]],
             ):
                 st.session_state["password_correct"] = True
-                # Don't store username + password in session state
+                st.session_state["authenticated"] = True
+                # Don't store password in session state
                 del st.session_state["password"]
+                # Store username in session state
                 st.session_state["username"] = st.session_state["username"]
             else:
                 st.session_state["password_correct"] = False
+                st.session_state["authenticated"] = False
         else:
             st.session_state["password_correct"] = False
+            st.session_state["authenticated"] = False
 
-    # Return True if the username + password is validated
-    if st.session_state.get("password_correct", False):
+    # Return True if the user is already authenticated
+    if st.session_state.authenticated:
         return True
 
     # Show inputs for username + password
     if login_form():
-        if "password_correct" in st.session_state:
+        if not st.session_state.password_correct:
             st.error("😕 User not known or password incorrect")
+        else:
+            return True
     return False
 
 def initialize_api_credentials():
@@ -120,8 +134,9 @@ def add_logout_button():
     st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         # Clear session state
-        for key in st.session_state.keys():
-            del st.session_state[key]
+        st.session_state.authenticated = False
+        st.session_state.username = None
+        st.session_state.password_correct = False
         st.rerun()
 
 # Main Streamlit App
