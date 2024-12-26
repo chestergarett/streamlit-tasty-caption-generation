@@ -160,6 +160,7 @@ def add_logout_button():
         st.session_state.authenticated = False
         st.session_state.username = None
         st.session_state.password_correct = False
+        # Force a rerun to update the UI
         st.rerun()
 
 # Main Streamlit App
