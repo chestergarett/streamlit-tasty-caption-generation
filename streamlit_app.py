@@ -152,7 +152,7 @@ def initialize_session_state():
 
 def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
-    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="height: 0vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         # Clear cookie
         cookie_manager.delete("tasty_caption_auth")
