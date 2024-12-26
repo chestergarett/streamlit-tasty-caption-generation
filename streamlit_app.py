@@ -158,11 +158,10 @@ def initialize_session_state():
 
 def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
-    st.sidebar.markdown('<div style="height: 0vh;"></div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         # Clear cookie
         cookie_manager.delete("tasty_caption_auth")
-        # Double check cookie deletion by setting it to empty
         cookie_manager.set("tasty_caption_auth", "", expires_at=datetime.datetime.now())
         
         # Clear all session state
@@ -173,6 +172,13 @@ def add_logout_button():
         st.session_state.authenticated = False
         st.session_state.username = None
         st.session_state.password_correct = False
+        
+        # Force cookie expiration in browser
+        cookie_manager.set(
+            "tasty_caption_auth",
+            "",
+            expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
+        )
         
         # Force a rerun to update the UI
         st.rerun()
