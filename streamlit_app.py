@@ -162,7 +162,11 @@ def add_logout_button():
     if st.sidebar.button("Logout"):
         # Clear cookie
         cookie_manager.delete("tasty_caption_auth")
-        cookie_manager.set("tasty_caption_auth", "", expires_at=datetime.datetime.now())
+        cookie_manager.set(
+            "tasty_caption_auth", 
+            "", 
+            expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
+        )
         
         # Clear all session state
         for key in list(st.session_state.keys()):
@@ -177,6 +181,7 @@ def add_logout_button():
         cookie_manager.set(
             "tasty_caption_auth",
             "",
+            key="logout_cookie",  # Added unique key
             expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
         )
         
