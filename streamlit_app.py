@@ -166,7 +166,7 @@ def main():
         
         # Sliders and inputs for settings with tooltips
         st.slider(
-            "Number of Captions ℹ️", 
+            "Number of Captions", 
             min_value=1, 
             max_value=100, 
             value=st.session_state.num_captions,
@@ -176,7 +176,7 @@ def main():
         st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
         st.select_slider(
-            "Max Tokens ℹ️", 
+            "Max Tokens", 
             options=[256, 512, 1024], 
             value=st.session_state.max_length,
             key="max_length",
@@ -185,7 +185,7 @@ def main():
         st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
         st.slider(
-            "Temperature ℹ️", 
+            "Temperature", 
             min_value=0.0, 
             max_value=1.5, 
             value=st.session_state.temperature,
@@ -196,7 +196,7 @@ def main():
         st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
         st.slider(
-            "Top-K ℹ️", 
+            "Top-K", 
             min_value=0, 
             max_value=100, 
             value=st.session_state.top_k,
@@ -207,7 +207,7 @@ def main():
         st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
         st.slider(
-            "Top-P ℹ️", 
+            "Top-P", 
             min_value=0.0, 
             max_value=1.0, 
             value=st.session_state.top_p,
