@@ -60,8 +60,11 @@ def check_password():
     
     # Check if authentication cookie exists
     cookie_name = "tasty_caption_auth"
-    if cookie_manager.get(cookie_name):
-        stored_username = cookie_manager.get(cookie_name)
+    cookie_value = cookie_manager.get(cookie_name)
+    
+    # Only accept non-empty cookie values
+    if cookie_value and cookie_value.strip():
+        stored_username = cookie_value
         st.session_state.authenticated = True
         st.session_state.username = stored_username
         return True
@@ -152,13 +155,22 @@ def initialize_session_state():
 
 def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
-    st.sidebar.markdown('<div style="height: 0vh;"></div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
         # Clear cookie
         cookie_manager.delete("tasty_caption_auth")
+        # Double check cookie deletion by setting it to empty
+        cookie_manager.set("tasty_caption_auth", "", expires_at=datetime.datetime.now())
+        
         # Clear all session state
         for key in list(st.session_state.keys()):
             del st.session_state[key]
+        
+        # Initialize fresh session state
+        st.session_state.authenticated = False
+        st.session_state.username = None
+        st.session_state.password_correct = False
+        
         # Force a rerun to update the UI
         st.rerun()
 
