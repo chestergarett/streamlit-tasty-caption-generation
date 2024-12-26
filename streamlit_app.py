@@ -7,6 +7,7 @@ from google.oauth2 import service_account
 from dotenv import load_dotenv 
 import hashlib
 import time
+import hmac
 
 load_dotenv() 
 
@@ -39,40 +40,42 @@ def is_valid_token(token: str) -> bool:
     except Exception:
         return False
 
-def login_page():
-    """Display login page and handle authentication"""
-    # Check for existing session token in query parameters
-    token = st.query_params.get('token', None)
-    
-    if token and is_valid_token(token):
-        st.session_state.authenticated = True
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def login_form():
+        """Form with widgets to collect user information"""
+        with st.form("Credentials"):
+            username = st.text_input("Username", key="username")
+            password = st.text_input("Password", type="password", key="password")
+            submitted = st.form_submit_button("Log in", on_click=password_entered)
+            return submitted
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["username"] in st.secrets["authorized_users"]:
+            if hmac.compare_digest(
+                st.session_state["password"],
+                st.secrets.authorized_users[st.session_state["username"]],
+            ):
+                st.session_state["password_correct"] = True
+                # Don't store username + password in session state
+                del st.session_state["password"]
+                st.session_state["username"] = st.session_state["username"]
+            else:
+                st.session_state["password_correct"] = False
+        else:
+            st.session_state["password_correct"] = False
+
+    # Return True if the username + password is validated
+    if st.session_state.get("password_correct", False):
         return True
-    
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-    
-    if not st.session_state.authenticated:
-        st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            username = st.text_input("Username", autocomplete="username")
-            password = st.text_input("Password", type="password", autocomplete="current-password")
-            
-            if st.button("Login"):
-                if check_credentials(username, password):
-                    # Generate and store session token
-                    token = get_session_token(username, password)
-                    st.session_state.session_token = token
-                    st.session_state.authenticated = True
-                    st.session_state.username = username
-                    
-                    # Set query parameters with session token
-                    st.query_params['token'] = token
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password")
-        return False
-    return True
+
+    # Show inputs for username + password
+    if login_form():
+        if "password_correct" in st.session_state:
+            st.error("😕 User not known or password incorrect")
+    return False
 
 def initialize_api_credentials():
     """Initialize API credentials after successful login"""
@@ -116,8 +119,6 @@ def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
     st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
-        # Clear query parameters
-        st.query_params.clear()
         # Clear session state
         for key in st.session_state.keys():
             del st.session_state[key]
@@ -125,12 +126,11 @@ def add_logout_button():
 
 # Main Streamlit App
 def main():
+    if not check_password():
+        st.stop()
+
     # Initialize session state
     initialize_session_state()
-    
-    # First check login
-    if not login_page():
-        st.stop()  # Stop execution if not logged in
     
     # Load CSS file
     load_css("styles.css")
