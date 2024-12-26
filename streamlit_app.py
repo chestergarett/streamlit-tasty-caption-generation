@@ -5,26 +5,8 @@ import json
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from dotenv import load_dotenv 
-import hashlib
-import time
-import hmac
-import extra_streamlit_components as stx
-import datetime
 
 load_dotenv() 
-
-# Initialize session state variables
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
-if 'username' not in st.session_state:
-    st.session_state.username = None
-if 'password_correct' not in st.session_state:
-    st.session_state.password_correct = False
-
-def get_manager():
-    return stx.CookieManager()
-
-cookie_manager = get_manager()
 
 # --- Authentication Functions ---
 def check_credentials(username, password):
@@ -38,85 +20,27 @@ def check_credentials(username, password):
         st.error(f"Error in authentication")
         return False
 
-def get_session_token(username: str, password: str) -> str:
-    """Create a session token from username and timestamp"""
-    timestamp = str(int(time.time()))
-    token = f"{username}{password}{timestamp}"
-    return hashlib.sha256(token.encode()).hexdigest()
-
-def is_valid_token(token: str) -> bool:
-    """Validate the session token from query parameters"""
-    if not token:
-        return False
-    try:
-        # Get stored token from session state
-        stored_token = st.session_state.get('session_token')
-        return stored_token == token
-    except Exception:
-        return False
-
-def check_password():
-    """Returns `True` if the user had the correct password."""
+def login_page():
+    """Display login page and handle authentication"""
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
     
-    # Check if authentication cookie exists
-    cookie_name = "tasty_caption_auth"
-    cookie_value = cookie_manager.get(cookie_name)
-    
-    # Only accept non-empty cookie values
-    if cookie_value and cookie_value.strip():
-        stored_username = cookie_value
-        st.session_state.authenticated = True
-        st.session_state.username = stored_username
-        return True
-
-    def login_form():
-        """Form with widgets to collect user information"""
-        with st.form("Credentials"):
-            username = st.text_input("Username", key="username")
-            password = st.text_input("Password", type="password", key="password")
-            submitted = st.form_submit_button("Log in", on_click=password_entered)
-            return submitted
-
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if st.session_state["username"] in st.secrets["authorized_users"]:
-            if hmac.compare_digest(
-                st.session_state["password"],
-                st.secrets.authorized_users[st.session_state["username"]],
-            ):
-                st.session_state["password_correct"] = True
-                st.session_state["authenticated"] = True
-                # Don't store password in session state
-                del st.session_state["password"]
-                # Store username in session state
-                st.session_state["username"] = st.session_state["username"]
-                # Set authentication cookie
-                cookie_manager.set(
-                    "tasty_caption_auth", 
-                    st.session_state["username"], 
-                    expires_at=datetime.datetime.now() + datetime.timedelta(days=30)
-                )
-            else:
-                st.session_state["password_correct"] = False
-                st.session_state["authenticated"] = False
-        else:
-            st.session_state["password_correct"] = False
-            st.session_state["authenticated"] = False
-
-    # Return True if the user is already authenticated
-    if st.session_state.authenticated:
-        return True
-
-    # Show inputs for username + password
-    if login_form():
-        if not st.session_state.password_correct:
-            # Clear any existing cookies on failed login
-            cookie_manager.delete("tasty_caption_auth")
-            cookie_manager.set("tasty_caption_auth", "", expires_at=datetime.datetime.now())
-            st.error("😕 User not known or password incorrect")
-        else:
-            return True
-    return False
+    if not st.session_state.authenticated:
+        st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            username = st.text_input("Username", autocomplete="off")
+            password = st.text_input("Password", type="password", autocomplete="off")
+            
+            if st.button("Login"):
+                if check_credentials(username, password):
+                    st.session_state.authenticated = True
+                    st.session_state.username = username
+                    st.rerun()
+                else:
+                    st.error("Invalid username or password")
+        return False
+    return True
 
 def initialize_api_credentials():
     """Initialize API credentials after successful login"""
@@ -158,43 +82,21 @@ def initialize_session_state():
 
 def add_logout_button():
     """Add a logout button to the bottom of the sidebar"""
-    st.sidebar.markdown('<div style="height: 40vh;"></div>', unsafe_allow_html=True)
+    # Create empty space to push the button to the bottom
+    st.sidebar.markdown('<div style="height: 0vh;"></div>', unsafe_allow_html=True)
     if st.sidebar.button("Logout"):
-        # Clear cookie
-        cookie_manager.delete("tasty_caption_auth")
-        cookie_manager.set(
-            "tasty_caption_auth", 
-            "", 
-            expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
-        )
-        
-        # Clear all session state
-        for key in list(st.session_state.keys()):
+        for key in st.session_state.keys():
             del st.session_state[key]
-        
-        # Initialize fresh session state
-        st.session_state.authenticated = False
-        st.session_state.username = None
-        st.session_state.password_correct = False
-        
-        # Force cookie expiration in browser
-        cookie_manager.set(
-            "tasty_caption_auth",
-            "",
-            key="logout_cookie",  # Added unique key
-            expires_at=datetime.datetime.now() - datetime.timedelta(days=1)
-        )
-        
-        # Force a rerun to update the UI
         st.rerun()
 
 # Main Streamlit App
 def main():
-    if not check_password():
-        st.stop()
-
     # Initialize session state
     initialize_session_state()
+    
+    # First check login
+    if not login_page():
+        st.stop()  # Stop execution if not logged in
     
     # Load CSS file
     load_css("styles.css")
