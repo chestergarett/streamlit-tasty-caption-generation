@@ -29,8 +29,8 @@ def login_page():
         st.markdown("<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            username = st.text_input("Username", autocomplete="off")
-            password = st.text_input("Password", type="password", autocomplete="off")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
             
             if st.button("Login"):
                 if check_credentials(username, password):
@@ -122,12 +122,15 @@ def main():
         if not is_valid:
             st.error(error_message)
         else:
-            with st.spinner("Generating captions..."):
-                # Clear previous captions
-                st.session_state.generated_captions = []
-
-                # Generate captions logic
-                for i in range(st.session_state["num_captions"]):
+            # Clear previous captions
+            st.session_state.generated_captions = []
+            
+            # Create a placeholder for streaming captions
+            caption_placeholder = st.empty()
+            
+            # Generate captions logic
+            for i in range(st.session_state["num_captions"]):
+                with st.spinner(f"Generating caption {i + 1}..."):
                     response = generate_caption_from_api(
                         instruction,
                         input_text,
@@ -141,10 +144,12 @@ def main():
                     if response:
                         # Store caption in session state
                         st.session_state.generated_captions.append(response)
-
-    # Display stored captions
-    for i, caption in enumerate(st.session_state.generated_captions):
-        st.write(f"**Caption {i + 1}:** {caption}")
+                        
+                        # Update the display with all generated captions so far
+                        caption_text = ""
+                        for idx, caption in enumerate(st.session_state.generated_captions):
+                            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
+                        caption_placeholder.markdown(caption_text)
 
     # Generation Settings in Sidebar
     with st.sidebar:
