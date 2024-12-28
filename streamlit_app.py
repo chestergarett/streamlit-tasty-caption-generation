@@ -282,45 +282,71 @@ def main():
             st.button("Template 3", disabled=disabled_state,
                      on_click=lambda: set_template_settings("template3"))
         
-        # Settings sliders
+        # Number of Captions slider
+        st.slider(
+            "Number of Captions",
+            min_value=1,
+            max_value=100,
+            value=st.session_state.get("num_captions", 1),
+            step=1,
+            key="num_captions",
+            help="Number of captions to generate",
+            disabled=disabled_state
+        )
+        
+        # Max Tokens slider
+        st.slider(
+            "Max Tokens",
+            min_value=256,
+            max_value=1024,
+            value=st.session_state.get("max_length", 1024),
+            step=256,
+            key="max_length",
+            help="Maximum length of generated text",
+            disabled=disabled_state
+        )
+        
+        # Temperature slider
         st.slider(
             "Temperature", 
             min_value=0.0, 
             max_value=1.5, 
-            value=st.session_state.temperature,
+            value=st.session_state.get("temperature", 0.9),
             step=0.10, 
             key="temperature",
             help="Controls randomness in the generation...",
             disabled=disabled_state
         )
         
+        # Top-K slider
         st.slider(
             "Top-K", 
             min_value=0, 
             max_value=100, 
-            value=st.session_state.top_k,
+            value=st.session_state.get("top_k", 50),
             step=10, 
             key="top_k",
             help="Limits the cumulative probability...",
             disabled=disabled_state
         )
         
+        # Top-P slider
         st.slider(
             "Top-P", 
             min_value=0.0, 
             max_value=1.0, 
-            value=st.session_state.top_p,
+            value=st.session_state.get("top_p", 0.9),
             step=0.10, 
             key="top_p",
             help="Also known as nucleus sampling...",
             disabled=disabled_state
         )
-
-        # Add some space before the buttons
+        
+        # Add some space before the history button
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Add History button with dynamic styling
-        active_style = "background-color: white !important; color: black !important;" if st.session_state.show_history else ""
+        # History button with dynamic styling
+        active_style = "background-color: white; color: black;" if st.session_state.show_history else ""
         
         st.markdown(
             f"""
@@ -339,14 +365,19 @@ def main():
         
         # Wrap the history button in a div with the specific class
         st.markdown('<div class="history-button">', unsafe_allow_html=True)
-        if st.button("📜 View Generation History", use_container_width=True, key="history_button"):
+        if st.button("📜 View Generation History", 
+                    use_container_width=True,
+                    key="history_button",
+                    disabled=disabled_state):
             st.session_state.show_history = not st.session_state.show_history
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Add Logout button at the bottom
         st.markdown('<div style="position: fixed; bottom: 20px; width: 300px;">', unsafe_allow_html=True)
-        if st.button("Logout", use_container_width=True):
+        if st.button("Logout", 
+                    use_container_width=True,
+                    disabled=disabled_state):
             for key in st.session_state.keys():
                 del st.session_state[key]
             st.rerun()
