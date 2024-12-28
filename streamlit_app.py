@@ -5,6 +5,7 @@ import json
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from dotenv import load_dotenv 
+import streamlit.components.v1 as components
 
 load_dotenv() 
 
@@ -68,6 +69,7 @@ def initialize_session_state():
         "authenticated": False,
         "username": None,
         "generated_captions": [],
+        "caption_history": [],
         "num_captions": 1,
         "max_length": 1024,
         "temperature": 0.90,
@@ -89,51 +91,34 @@ def add_logout_button():
             del st.session_state[key]
         st.rerun()
 
-# Main Streamlit App
-def main():
-    # Initialize session state
-    initialize_session_state()
-    
-    # First check login
-    if not login_page():
-        st.stop()  # Stop execution if not logged in
-    
-    # Load CSS file
-    load_css("styles.css")
-    
-    # Initialize API credentials after successful login
-    access_token = initialize_api_credentials()
-    
-    # Streamlit App Title
+def show_generation_page(access_token):
+    """Display the main caption generation page"""
     st.markdown(
         "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
         unsafe_allow_html=True
     )
     
-    # Welcome message with username
+    # Welcome message
     st.markdown(f"Welcome, {st.session_state.username}!")
     
-    # Main content: Input fields and caption generation
+    # Input fields and generation button
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     
-    if st.button("Generate Captions"):
+    if st.button("Generate Captions", use_container_width=True):
         is_valid, error_message = validate_inputs(instruction, input_text)
         if not is_valid:
             st.error(error_message)
         else:
             # Clear previous captions
             st.session_state.generated_captions = []
-            
-            # Create a placeholder for streaming captions
             caption_placeholder = st.empty()
             
-            # Generate captions logic
+            # Generate captions
             for i in range(st.session_state["num_captions"]):
                 with st.spinner(f"Generating caption {i + 1}..."):
                     response = generate_caption_from_api(
-                        instruction,
-                        input_text,
+                        instruction, input_text,
                         st.session_state["max_length"],
                         st.session_state["temperature"],
                         st.session_state["top_k"],
@@ -142,16 +127,81 @@ def main():
                     )
                     
                     if response:
-                        # Store caption in session state
                         st.session_state.generated_captions.append(response)
-                        
-                        # Update the display with all generated captions so far
                         caption_text = ""
                         for idx, caption in enumerate(st.session_state.generated_captions):
                             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
                         caption_placeholder.markdown(caption_text)
+            
+            # After generation is complete, add to history
+            if st.session_state.generated_captions:
+                history_entry = {
+                    "instruction": instruction,
+                    "context": input_text,
+                    "captions": st.session_state.generated_captions,
+                    "settings": {
+                        "temperature": st.session_state.temperature,
+                        "top_k": st.session_state.top_k,
+                        "top_p": st.session_state.top_p
+                    }
+                }
+                # Add new entry to the beginning of the history
+                st.session_state.caption_history.insert(0, history_entry)
 
-    # Generation Settings in Sidebar
+def show_history_page():
+    """Display the history page"""
+    st.markdown(
+        "<h1 style='text-align: center;'>Generation History 📜</h1>",
+        unsafe_allow_html=True
+    )
+    
+    if not st.session_state.caption_history:
+        st.info("No generation history yet")
+    else:
+        total_entries = len(st.session_state.caption_history)
+        for idx, entry in enumerate(st.session_state.caption_history):
+            # Reverse the numbering: newest gets highest number
+            display_num = total_entries - idx
+            
+            # Auto-expand the latest (which will now have the highest number)
+            with st.expander(f"Generation {display_num}", expanded=(idx == 0)):
+                st.write("**Instruction:**")
+                st.write(entry["instruction"])
+                st.write("**Context:**")
+                st.write(entry["context"])
+                st.write("**Settings:**")
+                st.write(f"- Temperature: {entry['settings']['temperature']}")
+                st.write(f"- Top-k: {entry['settings']['top_k']}")
+                st.write(f"- Top-p: {entry['settings']['top_p']}")
+                st.write("**Generated Captions:**")
+                for i, caption in enumerate(entry["captions"]):
+                    st.write(f"*Caption {i + 1}:* {caption}")
+                
+                if st.button("Use These Settings", key=f"settings_{idx}"):
+                    st.session_state.temperature = entry["settings"]["temperature"]
+                    st.session_state.top_k = entry["settings"]["top_k"]
+                    st.session_state.top_p = entry["settings"]["top_p"]
+                    st.session_state.show_history = False  # Return to generation page
+                    st.rerun()
+
+def main():
+    # Initialize session state
+    initialize_session_state()
+    
+    if 'show_history' not in st.session_state:
+        st.session_state.show_history = False
+    
+    # First check login
+    if not login_page():
+        st.stop()
+    
+    # Load CSS file
+    load_css("styles.css")
+    
+    # Initialize API credentials
+    access_token = initialize_api_credentials()
+
+    # Left sidebar for Generation Settings
     with st.sidebar:
         st.header("Generation Settings")
         
@@ -242,8 +292,51 @@ def main():
             help="Also known as nucleus sampling. Controls diversity by considering tokens whose cumulative probability exceeds P. Lower values (0.1) are more focused, higher values (0.9) are more diverse."
         )
 
-    # Add logout button at the bottom of sidebar
-    add_logout_button()
+        # Add some space before the buttons
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        
+        # Add History button with dynamic styling
+        button_style = "background-color: white; color: black;" if st.session_state.show_history else ""
+        st.markdown(
+            f"""
+            <style>
+            div[data-testid="stButton"] button {{
+                width: 100%;
+                {button_style}
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("📜 View Generation History", use_container_width=True):
+            st.session_state.show_history = not st.session_state.show_history
+            st.rerun()
+        
+        # Add Logout button at the bottom
+        st.markdown('<div style="position: fixed; bottom: 20px; width: 300px;">', unsafe_allow_html=True)
+        if st.button("Logout", use_container_width=True):
+            for key in st.session_state.keys():
+                del st.session_state[key]
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Main content area - toggle between generation and history
+    if st.session_state.show_history:
+        show_history_page()
+    else:
+        show_generation_page(access_token)
+
+# Add this to handle the component value changes
+if 'component_value' in st.session_state:
+    if isinstance(st.session_state.component_value, dict):
+        # Handle settings update
+        st.session_state.temperature = st.session_state.component_value['temperature']
+        st.session_state.top_k = st.session_state.component_value['top_k']
+        st.session_state.top_p = st.session_state.component_value['top_p']
+        st.rerun()
+    else:
+        # Handle modal close
+        st.session_state.show_history = st.session_state.component_value
 
 def generate_caption_from_api(
     instruction: str,
@@ -335,4 +428,10 @@ def validate_inputs(instruction: str, input_text: str) -> tuple[bool, str]:
 
 # Start the Streamlit app
 if __name__ == "__main__":
+    # Initialize session state for modal controls
+    if 'closeModal' not in st.session_state:
+        st.session_state.closeModal = False
+    if 'useSettings' not in st.session_state:
+        st.session_state.useSettings = None
+        
     main()
