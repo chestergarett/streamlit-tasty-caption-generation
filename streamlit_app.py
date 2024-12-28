@@ -98,7 +98,7 @@ def add_logout_button():
 def show_generation_page(access_token):
     """Display the main caption generation page"""
     st.markdown(
-        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
+        "<h1 style='text-align: center;'>Tasty Caption Generation 🫦 </h1>",
         unsafe_allow_html=True
     )
     
@@ -315,11 +315,12 @@ def main():
             help="Also known as nucleus sampling. Controls diversity by considering tokens whose cumulative probability exceeds P. Lower values (0.1) are more focused, higher values (0.9) are more diverse."
         )
 
-        # Add some space before the buttons
+        # Add some space before the toggle button
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Add History button with dynamic styling
-        active_style = "background-color: white !important; color: black !important;" if st.session_state.show_history else ""
+        # Dynamic button text and styling based on current page
+        button_text = "🎯 Generate Captions" if st.session_state.show_history else "📜 View Generation History"
+        active_style = "background-color: white; color: black;" if st.session_state.show_history else ""
         
         st.markdown(
             f"""
@@ -336,9 +337,12 @@ def main():
             unsafe_allow_html=True
         )
         
-        # Wrap the history button in a div with the specific class
+        # Wrap the toggle button in a div with the specific class
         st.markdown('<div class="history-button">', unsafe_allow_html=True)
-        if st.button("📜 View Generation History", use_container_width=True, key="history_button"):
+        if st.button(button_text, 
+                    use_container_width=True,
+                    key="toggle_page_button",
+                    disabled=st.session_state.is_generating):
             st.session_state.show_history = not st.session_state.show_history
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
