@@ -123,21 +123,37 @@ def show_generation_page(access_token):
         st.success("Settings updated successfully!")
         st.session_state.settings_updated = False
     
-    # Replace text input with dropdown
-    selected_category = st.selectbox(
-        "Select Caption Category:",
-        options=list(st.session_state.instruction_categories.keys()),
+    # Main content: Input fields and caption generation
+    instruction_options = [
+        "Tip Me",
+        "Winner",
+        "Holiday",
+        "Bundle",
+        "Descriptive",
+        "Spin the Wheel",
+        "Girlfriend",
+        "List",
+        "Short",
+        "Sub Promo",
+        "VIP",
+    ]
+    
+    # Apply pending settings if they exist
+    default_option = (st.session_state.pending_settings or {}).get("selected_option", instruction_options[0])
+    default_context = (st.session_state.pending_settings or {}).get("context", "")
+    
+    # Main content: Input fields and caption generation
+    selected_option = st.selectbox(
+        "Select Category:", 
+        options=instruction_options,
+        index=instruction_options.index(default_option) if default_option in instruction_options else 0,
         disabled=st.session_state.is_generating
     )
-    
-    # Get the corresponding instruction
-    instruction = st.session_state.instruction_categories[selected_category]
-    
-    # Display the actual instruction that will be used (optional - you can remove this if you don't want to show it)
-    st.caption(f"Using instruction: *{instruction}*")
+    instruction = f"Generate a {selected_option} caption"
     
     input_text = st.text_area(
         "Enter Context:", 
+        value=default_context,  # Set the default value from history
         placeholder="Describe the Caption",
         disabled=st.session_state.is_generating
     )
@@ -179,10 +195,10 @@ def show_generation_page(access_token):
                             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
                         caption_placeholder.markdown(caption_text)
             
-            # After generation is complete, add to history
+            # When adding to history, include the selected category
             if st.session_state.current_captions:
                 history_entry = {
-                    "instruction": instruction,
+                    "selected_option": selected_option,  # Save the category
                     "context": input_text,
                     "captions": st.session_state.current_captions.copy(),
                     "settings": {
@@ -191,7 +207,6 @@ def show_generation_page(access_token):
                         "top_p": st.session_state.top_p
                     }
                 }
-                # Add new entry to the beginning of the history
                 st.session_state.caption_history.insert(0, history_entry)
 
 def show_history_page():
@@ -209,8 +224,8 @@ def show_history_page():
             display_num = total_entries - idx
             
             with st.expander(f"Generation {display_num}", expanded=(idx == 0)):
-                st.write("**Instruction:**")
-                st.write(entry["instruction"])
+                st.write("**Category:**")
+                st.write(entry["selected_option"])  # Add this to store the category
                 st.write("**Context:**")
                 st.write(entry["context"])
                 st.write("**Settings:**")
@@ -221,9 +236,15 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
-                if st.button("Use These Settings", key=f"use_settings_{display_num}"):
-                    # Store the settings we want to apply
-                    st.session_state.pending_settings = entry["settings"]
+                if st.button("Use These Settings & Context", key=f"use_settings_{display_num}"):
+                    # Store all the settings and context we want to apply
+                    st.session_state.pending_settings = {
+                        "temperature": entry["settings"]["temperature"],
+                        "top_k": entry["settings"]["top_k"],
+                        "top_p": entry["settings"]["top_p"],
+                        "selected_option": entry["selected_option"],  # Store selected category
+                        "context": entry["context"]  # Store context
+                    }
                     st.session_state.show_history = False
                     st.session_state.settings_updated = True
                     st.rerun()
