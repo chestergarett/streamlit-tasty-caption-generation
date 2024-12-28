@@ -1,6 +1,7 @@
 Llama-3-8B-Caption-RAG
 merged_model.mar
 .streamlit/secrets.toml
+.streamlit/config.toml
 ignore
 connections.py
 
