@@ -295,22 +295,35 @@ def main():
         # Add some space before the buttons
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Add History button with dynamic styling
-        button_style = "background-color: white; color: black;" if st.session_state.show_history else ""
-        st.markdown(
-            f"""
+        # Add History button with dynamic styling - now with more specific CSS selector
+        button_style = """
             <style>
-            div[data-testid="stButton"] button {{
+            /* Target only the history button using a specific class */
+            div.history-button button {
                 width: 100%;
-                {button_style}
-            }}
+            }
+            div.history-button button %s {
+                background-color: white !important;
+                color: black !important;
+            }
+            /* Ensure other buttons maintain their original style */
+            div:not(.history-button) button {
+                background-color: inherit;
+            }
             </style>
-            """,
+        """
+        
+        st.markdown(
+            button_style % ("" if not st.session_state.show_history else ""),
             unsafe_allow_html=True
         )
-        if st.button("📜 View Generation History", use_container_width=True):
+        
+        # Wrap the history button in a div with the specific class
+        st.markdown('<div class="history-button">', unsafe_allow_html=True)
+        if st.button("📜 View Generation History", use_container_width=True, key="history_button"):
             st.session_state.show_history = not st.session_state.show_history
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Add Logout button at the bottom
         st.markdown('<div style="position: fixed; bottom: 20px; width: 300px;">', unsafe_allow_html=True)
