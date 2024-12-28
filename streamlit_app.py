@@ -78,7 +78,20 @@ def initialize_session_state():
         "top_p": 0.90,
         "pending_settings": None,
         "settings_updated": False,
-        "is_generating": False
+        "is_generating": False,
+        "instruction_categories": {
+            "Tip me": "Generate a Tip Me Caption",
+            "Winner": "Generate a Winner Caption",
+            "Holiday": "Generate a Holiday Caption",
+            "Bundle": "Generate a Bundle Caption",
+            "Descriptive": "Generate a Descriptive Caption",
+            "Spin the Wheel": "Generate a Spin the Wheel Caption",
+            "Girlfriend": "Generate a Girlfriend Caption",
+            "List": "Generate a List Caption",
+            "Short": "Generate a Short Caption",
+            "Sub Promo": "Generate a Sub Promo Caption",
+            "VIP": "Generate a VIP Caption"
+        }
     }
     
     # Only set defaults if they don't exist in session state
@@ -98,7 +111,7 @@ def add_logout_button():
 def show_generation_page(access_token):
     """Display the main caption generation page"""
     st.markdown(
-        "<h1 style='text-align: center;'>Tasty Caption Generation 🫦 </h1>",
+        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
         unsafe_allow_html=True
     )
     
@@ -110,9 +123,24 @@ def show_generation_page(access_token):
         st.success("Settings updated successfully!")
         st.session_state.settings_updated = False
     
-    # Input fields and generation button
-    instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
-    input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
+    # Replace text input with dropdown
+    selected_category = st.selectbox(
+        "Select Caption Category:",
+        options=list(st.session_state.instruction_categories.keys()),
+        disabled=st.session_state.is_generating
+    )
+    
+    # Get the corresponding instruction
+    instruction = st.session_state.instruction_categories[selected_category]
+    
+    # Display the actual instruction that will be used (optional - you can remove this if you don't want to show it)
+    st.caption(f"Using instruction: *{instruction}*")
+    
+    input_text = st.text_area(
+        "Enter Context:", 
+        placeholder="Describe the Caption",
+        disabled=st.session_state.is_generating
+    )
     
     # Create a placeholder for captions
     caption_placeholder = st.empty()
