@@ -114,15 +114,16 @@ def main():
     # Welcome message with username
     st.markdown(f"Welcome, {st.session_state.username}!")
     
-    # Main content: Input fields and caption generation
-    instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
-    input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
+    # Main content area
+    col1, col2 = st.columns([3, 1])
     
-    # Create three columns: left sidebar, main content, and right sidebar
-    left_sidebar, main_content, right_sidebar = st.columns([1, 2, 1])
-
-    with main_content:
-        if st.button("Generate Captions"):
+    with col1:
+        # Main content: Input fields and caption generation
+        instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
+        input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
+        
+        # Generate button below the input fields
+        if st.button("Generate Captions", use_container_width=True):
             is_valid, error_message = validate_inputs(instruction, input_text)
             if not is_valid:
                 st.error(error_message)
@@ -147,10 +148,7 @@ def main():
                         )
                         
                         if response:
-                            # Store caption in session state
                             st.session_state.generated_captions.append(response)
-                            
-                            # Update the display with all generated captions so far
                             caption_text = ""
                             for idx, caption in enumerate(st.session_state.generated_captions):
                                 caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
@@ -168,36 +166,38 @@ def main():
                             "top_p": st.session_state.top_p
                         }
                     }
-                    st.session_state.caption_history.insert(0, history_entry)  # Add to start of list
+                    st.session_state.caption_history.insert(0, history_entry)
 
-    # Right sidebar for history
-    with right_sidebar:
-        st.markdown("### Generation History")
-        if not st.session_state.caption_history:
-            st.info("No generation history yet")
-        else:
-            for idx, entry in enumerate(st.session_state.caption_history):
-                with st.expander(f"Generation {idx + 1}"):
-                    st.markdown("**Instruction:**")
-                    st.markdown(entry["instruction"])
-                    st.markdown("**Context:**")
-                    st.markdown(entry["context"])
-                    st.markdown("**Settings:**")
-                    st.markdown(f"- Temperature: {entry['settings']['temperature']}")
-                    st.markdown(f"- Top-k: {entry['settings']['top_k']}")
-                    st.markdown(f"- Top-p: {entry['settings']['top_p']}")
-                    st.markdown("**Generated Captions:**")
-                    for i, caption in enumerate(entry["captions"]):
-                        st.markdown(f"*Caption {i + 1}:* {caption}")
-                    
-                    # Add a button to reuse these settings
-                    if st.button("Use These Settings", key=f"use_settings_{idx}"):
-                        st.session_state.temperature = entry["settings"]["temperature"]
-                        st.session_state.top_k = entry["settings"]["top_k"]
-                        st.session_state.top_p = entry["settings"]["top_p"]
-                        st.rerun()
+    # Right column for history toggle
+    with col2:
+        show_history = st.toggle("Show Generation History", value=False)
+        
+        if show_history:
+            st.markdown("### Generation History")
+            if not st.session_state.caption_history:
+                st.info("No generation history yet")
+            else:
+                for idx, entry in enumerate(st.session_state.caption_history):
+                    with st.expander(f"Generation {idx + 1}"):
+                        st.markdown("**Instruction:**")
+                        st.markdown(entry["instruction"])
+                        st.markdown("**Context:**")
+                        st.markdown(entry["context"])
+                        st.markdown("**Settings:**")
+                        st.markdown(f"- Temperature: {entry['settings']['temperature']}")
+                        st.markdown(f"- Top-k: {entry['settings']['top_k']}")
+                        st.markdown(f"- Top-p: {entry['settings']['top_p']}")
+                        st.markdown("**Generated Captions:**")
+                        for i, caption in enumerate(entry["captions"]):
+                            st.markdown(f"*Caption {i + 1}:* {caption}")
+                        
+                        if st.button("Use These Settings", key=f"use_settings_{idx}"):
+                            st.session_state.temperature = entry["settings"]["temperature"]
+                            st.session_state.top_k = entry["settings"]["top_k"]
+                            st.session_state.top_p = entry["settings"]["top_p"]
+                            st.rerun()
 
-    # Generation Settings in Sidebar
+    # Generation Settings in left Sidebar
     with st.sidebar:
         st.header("Generation Settings")
         
