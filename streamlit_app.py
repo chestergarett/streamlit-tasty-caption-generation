@@ -69,6 +69,7 @@ def initialize_session_state():
         "authenticated": False,
         "username": None,
         "generated_captions": [],
+        "current_captions": [],
         "caption_history": [],
         "num_captions": 1,
         "max_length": 1024,
@@ -76,7 +77,8 @@ def initialize_session_state():
         "top_k": 50,
         "top_p": 0.90,
         "pending_settings": None,
-        "settings_updated": False
+        "settings_updated": False,
+        "is_generating": False
     }
     
     # Only set defaults if they don't exist in session state
@@ -112,14 +114,23 @@ def show_generation_page(access_token):
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     
+    # Create a placeholder for captions
+    caption_placeholder = st.empty()
+    
+    # Display existing captions if they exist
+    if 'current_captions' in st.session_state and st.session_state.current_captions:
+        caption_text = ""
+        for idx, caption in enumerate(st.session_state.current_captions):
+            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
+        caption_placeholder.markdown(caption_text)
+    
     if st.button("Generate Captions", use_container_width=True):
         is_valid, error_message = validate_inputs(instruction, input_text)
         if not is_valid:
             st.error(error_message)
         else:
             # Clear previous captions
-            st.session_state.generated_captions = []
-            caption_placeholder = st.empty()
+            st.session_state.current_captions = []
             
             # Generate captions
             for i in range(st.session_state["num_captions"]):
@@ -134,18 +145,18 @@ def show_generation_page(access_token):
                     )
                     
                     if response:
-                        st.session_state.generated_captions.append(response)
+                        st.session_state.current_captions.append(response)
                         caption_text = ""
-                        for idx, caption in enumerate(st.session_state.generated_captions):
+                        for idx, caption in enumerate(st.session_state.current_captions):
                             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
                         caption_placeholder.markdown(caption_text)
             
             # After generation is complete, add to history
-            if st.session_state.generated_captions:
+            if st.session_state.current_captions:
                 history_entry = {
                     "instruction": instruction,
                     "context": input_text,
-                    "captions": st.session_state.generated_captions,
+                    "captions": st.session_state.current_captions.copy(),
                     "settings": {
                         "temperature": st.session_state.temperature,
                         "top_k": st.session_state.top_k,
