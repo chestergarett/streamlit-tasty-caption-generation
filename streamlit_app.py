@@ -224,26 +224,37 @@ def show_history_page():
             display_num = total_entries - idx
             
             with st.expander(f"Generation {display_num}", expanded=(idx == 0)):
-                st.write("**Category:**")
-                st.write(entry["selected_option"])  # Add this to store the category
-                st.write("**Context:**")
-                st.write(entry["context"])
-                st.write("**Settings:**")
-                st.write(f"- Temperature: {entry['settings']['temperature']}")
-                st.write(f"- Top-k: {entry['settings']['top_k']}")
-                st.write(f"- Top-p: {entry['settings']['top_p']}")
+                # Handle both old and new format entries
+                if "selected_option" in entry:
+                    st.write("**Category:**")
+                    st.write(entry["selected_option"])
+                
+                if "context" in entry:
+                    st.write("**Context:**")
+                    st.write(entry["context"])
+                
+                if "settings" in entry:
+                    st.write("**Settings:**")
+                    settings = entry["settings"]
+                    if "temperature" in settings:
+                        st.write(f"- Temperature: {settings['temperature']}")
+                    if "top_k" in settings:
+                        st.write(f"- Top-k: {settings['top_k']}")
+                    if "top_p" in settings:
+                        st.write(f"- Top-p: {settings['top_p']}")
+                
                 st.write("**Generated Captions:**")
-                for i, caption in enumerate(entry["captions"]):
+                for i, caption in enumerate(entry.get("captions", [])):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
                 if st.button("Use These Settings & Context", key=f"use_settings_{display_num}"):
                     # Store all the settings and context we want to apply
                     st.session_state.pending_settings = {
-                        "temperature": entry["settings"]["temperature"],
-                        "top_k": entry["settings"]["top_k"],
-                        "top_p": entry["settings"]["top_p"],
-                        "selected_option": entry["selected_option"],  # Store selected category
-                        "context": entry["context"]  # Store context
+                        "temperature": settings.get("temperature", 0.9),
+                        "top_k": settings.get("top_k", 50),
+                        "top_p": settings.get("top_p", 0.9),
+                        "selected_option": entry.get("selected_option", "Tip Me"),  # Default if not found
+                        "context": entry.get("context", "")  # Empty string if not found
                     }
                     st.session_state.show_history = False
                     st.session_state.settings_updated = True
