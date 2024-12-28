@@ -322,47 +322,32 @@ def main():
                 """
                 <script>
                     function closeModal() {
-                        window.parent.postMessage({
-                            type: 'streamlit:component',
-                            action: 'closeModal'
-                        }, '*');
+                        parent.postMessage({type: 'closeModal'}, '*');
                     }
                     
                     function useSettings(idx) {
-                        window.parent.postMessage({
-                            type: 'streamlit:component',
-                            action: 'useSettings',
-                            value: idx
-                        }, '*');
+                        parent.postMessage({type: 'useSettings', index: idx}, '*');
                     }
-                    
-                    // Listen for messages from the parent
-                    window.addEventListener('message', function(e) {
-                        if (e.data.type === 'streamlit:render') {
-                            // Component is ready to receive messages
-                            console.log('Modal component ready');
-                        }
-                    });
                 </script>
                 """,
-                height=0,
-                key="modal_handler"
+                height=0
             )
 
-    # Handle component interactions
-    if 'modal_handler' in st.session_state:
-        action = st.session_state.modal_handler.get('action')
-        if action == 'closeModal':
-            st.session_state.show_history = False
-            st.rerun()
-        elif action == 'useSettings':
-            idx = st.session_state.modal_handler.get('value')
-            if idx is not None and idx < len(st.session_state.caption_history):
-                settings = st.session_state.caption_history[idx]['settings']
-                st.session_state.temperature = settings['temperature']
-                st.session_state.top_k = settings['top_k']
-                st.session_state.top_p = settings['top_p']
-                st.rerun()
+    # Add event handlers using st.session_state
+    if st.session_state.get('closeModal'):
+        st.session_state.show_history = False
+        st.session_state.closeModal = False
+        st.rerun()
+        
+    if st.session_state.get('useSettings') is not None:
+        idx = st.session_state.useSettings
+        if idx < len(st.session_state.caption_history):
+            settings = st.session_state.caption_history[idx]['settings']
+            st.session_state.temperature = settings['temperature']
+            st.session_state.top_k = settings['top_k']
+            st.session_state.top_p = settings['top_p']
+        st.session_state.useSettings = None
+        st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -468,4 +453,10 @@ def validate_inputs(instruction: str, input_text: str) -> tuple[bool, str]:
 
 # Start the Streamlit app
 if __name__ == "__main__":
+    # Initialize session state for modal controls
+    if 'closeModal' not in st.session_state:
+        st.session_state.closeModal = False
+    if 'useSettings' not in st.session_state:
+        st.session_state.useSettings = None
+        
     main()
