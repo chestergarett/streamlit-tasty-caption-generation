@@ -158,8 +158,13 @@ def show_history_page():
     if not st.session_state.caption_history:
         st.info("No generation history yet")
     else:
+        total_entries = len(st.session_state.caption_history)
         for idx, entry in enumerate(st.session_state.caption_history):
-            with st.expander(f"Generation {idx + 1}", expanded=(idx == 0)):  # Auto-expand the latest
+            # Reverse the numbering: newest gets highest number
+            display_num = total_entries - idx
+            
+            # Auto-expand the latest (which will now have the highest number)
+            with st.expander(f"Generation {display_num}", expanded=(idx == 0)):
                 st.write("**Instruction:**")
                 st.write(entry["instruction"])
                 st.write("**Context:**")
