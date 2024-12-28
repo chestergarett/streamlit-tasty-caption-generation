@@ -290,20 +290,22 @@ def main():
         # Add some space before the buttons
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Add History button with dynamic styling - now with specific class
+        # Add History button with dynamic styling
         button_style = """
             <style>
-            /* Style specifically for the history button */
-            .history-button button {
+            div.history-button button {
                 width: 100%;
                 %s
             }
             </style>
-        """ % ("background-color: white; color: black;" if st.session_state.show_history else "")
+        """
         
-        st.markdown(button_style, unsafe_allow_html=True)
+        st.markdown(
+            button_style % ("background-color: white; color: black;" if st.session_state.show_history else ""),
+            unsafe_allow_html=True
+        )
         
-        # Wrap the button in a div with the specific class
+        # Wrap the history button in a div with the specific class
         st.markdown('<div class="history-button">', unsafe_allow_html=True)
         if st.button("📜 View Generation History", use_container_width=True):
             st.session_state.show_history = not st.session_state.show_history
