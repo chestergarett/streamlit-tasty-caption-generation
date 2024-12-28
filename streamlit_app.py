@@ -101,6 +101,11 @@ def show_generation_page(access_token):
     # Welcome message
     st.markdown(f"Welcome, {st.session_state.username}!")
     
+    # Show success message if settings were updated
+    if st.session_state.get('settings_updated', False):
+        st.success("Settings updated successfully!")
+        st.session_state.settings_updated = False
+    
     # Input fields and generation button
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
@@ -177,11 +182,16 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
-                if st.button("Use These Settings", key=f"settings_{idx}"):
+                # Use a unique key for each button and handle the click
+                if st.button("Use These Settings", key=f"use_settings_{display_num}"):
+                    # Update the settings in session state
                     st.session_state.temperature = entry["settings"]["temperature"]
                     st.session_state.top_k = entry["settings"]["top_k"]
                     st.session_state.top_p = entry["settings"]["top_p"]
-                    st.session_state.show_history = False  # Return to generation page
+                    # Switch back to generation page
+                    st.session_state.show_history = False
+                    # Add a success message
+                    st.session_state.settings_updated = True
                     st.rerun()
 
 def main():
