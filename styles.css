@@ -106,6 +106,7 @@
 
 /* Add some padding to the main content to prevent overlap */
 .main-content {
+    padding: 1rem;
     margin-right: 2rem;
 }
 
@@ -151,9 +152,4 @@
 
 .close-button:hover {
     background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Main content styling */
-.main-content {
-    padding: 1rem;
 }

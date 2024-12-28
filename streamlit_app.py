@@ -5,6 +5,7 @@ import json
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from dotenv import load_dotenv 
+import streamlit.components.v1 as components
 
 load_dotenv() 
 
@@ -206,9 +207,6 @@ def main():
         if st.button("📜 View Generation History", use_container_width=True):
             st.session_state.show_history = True
 
-    # Add logout button at the bottom of sidebar
-    add_logout_button()
-
     # Main content area
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
     
@@ -273,73 +271,112 @@ def main():
 
     # History Modal
     if st.session_state.show_history:
-        modal_html = """
-            <div class="modal-backdrop" id="historyModal" style="display: block;">
-                <div class="modal-content">
-                    <button class="close-button" onclick="closeModal()">×</button>
-                    <h2>Generation History</h2>
-        """
+        # Create a container for the modal
+        modal_container = st.container()
         
-        if not st.session_state.caption_history:
-            modal_html += "<p>No generation history yet</p>"
-        else:
-            for idx, entry in enumerate(st.session_state.caption_history):
-                modal_html += f"""
-                    <details>
-                        <summary>Generation {idx + 1}</summary>
-                        <p><strong>Instruction:</strong><br>{entry['instruction']}</p>
-                        <p><strong>Context:</strong><br>{entry['context']}</p>
-                        <p><strong>Settings:</strong></p>
-                        <ul>
-                            <li>Temperature: {entry['settings']['temperature']}</li>
-                            <li>Top-k: {entry['settings']['top_k']}</li>
-                            <li>Top-p: {entry['settings']['top_p']}</li>
-                        </ul>
-                        <p><strong>Generated Captions:</strong></p>
-                """
-                for i, caption in enumerate(entry['captions']):
-                    modal_html += f"<p><em>Caption {i + 1}:</em> {caption}</p>"
-                
-                modal_html += f"""
-                    <button onclick="useSettings({entry['settings']['temperature']}, {entry['settings']['top_k']}, {entry['settings']['top_p']})">
-                        Use These Settings
-                    </button>
-                    </details>
-                """
-        
-        modal_html += """
+        with modal_container:
+            modal_html = """
+                <div class="modal-backdrop" id="historyModal" style="display: block;">
+                    <div class="modal-content">
+                        <button class="close-button" onclick="closeModal()">×</button>
+                        <h2>Generation History</h2>
+            """
+            
+            if not st.session_state.caption_history:
+                modal_html += "<p>No generation history yet</p>"
+            else:
+                for idx, entry in enumerate(st.session_state.caption_history):
+                    modal_html += f"""
+                        <details>
+                            <summary>Generation {idx + 1}</summary>
+                            <p><strong>Instruction:</strong><br>{entry['instruction']}</p>
+                            <p><strong>Context:</strong><br>{entry['context']}</p>
+                            <p><strong>Settings:</strong></p>
+                            <ul>
+                                <li>Temperature: {entry['settings']['temperature']}</li>
+                                <li>Top-k: {entry['settings']['top_k']}</li>
+                                <li>Top-p: {entry['settings']['top_p']}</li>
+                            </ul>
+                            <p><strong>Generated Captions:</strong></p>
+                    """
+                    for i, caption in enumerate(entry['captions']):
+                        modal_html += f"<p><em>Caption {i + 1}:</em> {caption}</p>"
+                    
+                    modal_html += f"""
+                        <button onclick="useSettings({idx})">
+                            Use These Settings
+                        </button>
+                        </details>
+                    """
+            
+            modal_html += """
+                    </div>
                 </div>
-            </div>
-            <script>
-                function closeModal() {
-                    window.parent.postMessage({type: 'closeModal'}, '*');
-                }
-                
-                function useSettings(temp, topk, topp) {
-                    window.parent.postMessage({
-                        type: 'useSettings',
-                        settings: {temperature: temp, top_k: topk, top_p: topp}
-                    }, '*');
-                }
-            </script>
-        """
-        
-        st.markdown(modal_html, unsafe_allow_html=True)
-        
-        # Handle messages from JavaScript
-        components.html("""
-            <script>
-                window.addEventListener('message', function(e) {
-                    if (e.data.type === 'closeModal') {
-                        window.parent.postMessage({type: 'streamlit:setComponentValue', value: false}, '*');
-                    } else if (e.data.type === 'useSettings') {
-                        window.parent.postMessage({type: 'streamlit:setComponentValue', value: e.data.settings}, '*');
+            """
+            
+            # Render the modal HTML
+            st.markdown(modal_html, unsafe_allow_html=True)
+            
+            # JavaScript handler component
+            components.html(
+                """
+                <script>
+                    function closeModal() {
+                        window.parent.postMessage({
+                            type: 'streamlit:component',
+                            action: 'closeModal'
+                        }, '*');
                     }
-                });
-            </script>
-        """, height=0)
+                    
+                    function useSettings(idx) {
+                        window.parent.postMessage({
+                            type: 'streamlit:component',
+                            action: 'useSettings',
+                            value: idx
+                        }, '*');
+                    }
+                    
+                    // Listen for messages from the parent
+                    window.addEventListener('message', function(e) {
+                        if (e.data.type === 'streamlit:render') {
+                            // Component is ready to receive messages
+                            console.log('Modal component ready');
+                        }
+                    });
+                </script>
+                """,
+                height=0,
+                key="modal_handler"
+            )
+
+    # Handle component interactions
+    if 'modal_handler' in st.session_state:
+        action = st.session_state.modal_handler.get('action')
+        if action == 'closeModal':
+            st.session_state.show_history = False
+            st.rerun()
+        elif action == 'useSettings':
+            idx = st.session_state.modal_handler.get('value')
+            if idx is not None and idx < len(st.session_state.caption_history):
+                settings = st.session_state.caption_history[idx]['settings']
+                st.session_state.temperature = settings['temperature']
+                st.session_state.top_k = settings['top_k']
+                st.session_state.top_p = settings['top_p']
+                st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+# Add this to handle the component value changes
+if 'component_value' in st.session_state:
+    if isinstance(st.session_state.component_value, dict):
+        # Handle settings update
+        st.session_state.temperature = st.session_state.component_value['temperature']
+        st.session_state.top_k = st.session_state.component_value['top_k']
+        st.session_state.top_p = st.session_state.component_value['top_p']
+        st.rerun()
+    else:
+        # Handle modal close
+        st.session_state.show_history = st.session_state.component_value
 
 def generate_caption_from_api(
     instruction: str,
