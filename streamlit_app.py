@@ -200,12 +200,20 @@ def main():
             help="Also known as nucleus sampling. Controls diversity by considering tokens whose cumulative probability exceeds P. Lower values (0.1) are more focused, higher values (0.9) are more diverse."
         )
 
-        # Add some space before the history button
+        # Add some space before the buttons
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Add History button in sidebar
+        # Add History button
         if st.button("📜 View Generation History", use_container_width=True):
             st.session_state.show_history = True
+        
+        # Add Logout button at the bottom
+        st.markdown('<div style="position: fixed; bottom: 20px; width: 300px;">', unsafe_allow_html=True)
+        if st.button("Logout", use_container_width=True):
+            for key in st.session_state.keys():
+                del st.session_state[key]
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Main content area
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
@@ -219,11 +227,10 @@ def main():
     # Welcome message
     st.markdown(f"Welcome, {st.session_state.username}!")
     
-    # Input fields
+    # Input fields and generation button
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     
-    # Generate button
     if st.button("Generate Captions", use_container_width=True):
         is_valid, error_message = validate_inputs(instruction, input_text)
         if not is_valid:
@@ -271,83 +278,38 @@ def main():
 
     # History Modal
     if st.session_state.show_history:
-        # Create a container for the modal
-        modal_container = st.container()
-        
-        with modal_container:
-            modal_html = """
-                <div class="modal-backdrop" id="historyModal" style="display: block;">
-                    <div class="modal-content">
-                        <button class="close-button" onclick="closeModal()">×</button>
-                        <h2>Generation History</h2>
-            """
-            
-            if not st.session_state.caption_history:
-                modal_html += "<p>No generation history yet</p>"
-            else:
-                for idx, entry in enumerate(st.session_state.caption_history):
-                    modal_html += f"""
-                        <details>
-                            <summary>Generation {idx + 1}</summary>
-                            <p><strong>Instruction:</strong><br>{entry['instruction']}</p>
-                            <p><strong>Context:</strong><br>{entry['context']}</p>
-                            <p><strong>Settings:</strong></p>
-                            <ul>
-                                <li>Temperature: {entry['settings']['temperature']}</li>
-                                <li>Top-k: {entry['settings']['top_k']}</li>
-                                <li>Top-p: {entry['settings']['top_p']}</li>
-                            </ul>
-                            <p><strong>Generated Captions:</strong></p>
-                    """
-                    for i, caption in enumerate(entry['captions']):
-                        modal_html += f"<p><em>Caption {i + 1}:</em> {caption}</p>"
-                    
-                    modal_html += f"""
-                        <button onclick="useSettings({idx})">
-                            Use These Settings
-                        </button>
-                        </details>
-                    """
-            
-            modal_html += """
-                    </div>
-                </div>
-            """
-            
-            # Render the modal HTML
-            st.markdown(modal_html, unsafe_allow_html=True)
-            
-            # JavaScript handler component
-            components.html(
-                """
-                <script>
-                    function closeModal() {
-                        parent.postMessage({type: 'closeModal'}, '*');
-                    }
-                    
-                    function useSettings(idx) {
-                        parent.postMessage({type: 'useSettings', index: idx}, '*');
-                    }
-                </script>
-                """,
-                height=0
-            )
-
-    # Add event handlers using st.session_state
-    if st.session_state.get('closeModal'):
-        st.session_state.show_history = False
-        st.session_state.closeModal = False
-        st.rerun()
-        
-    if st.session_state.get('useSettings') is not None:
-        idx = st.session_state.useSettings
-        if idx < len(st.session_state.caption_history):
-            settings = st.session_state.caption_history[idx]['settings']
-            st.session_state.temperature = settings['temperature']
-            st.session_state.top_k = settings['top_k']
-            st.session_state.top_p = settings['top_p']
-        st.session_state.useSettings = None
-        st.rerun()
+        with st.container():
+            st.markdown("### Generation History")
+            col1, col2, col3 = st.columns([1,10,1])
+            with col2:
+                # Close button
+                if st.button("✕", help="Close History"):
+                    st.session_state.show_history = False
+                    st.rerun()
+                
+                # Show history entries
+                if not st.session_state.caption_history:
+                    st.info("No generation history yet")
+                else:
+                    for idx, entry in enumerate(st.session_state.caption_history):
+                        with st.expander(f"Generation {idx + 1}"):
+                            st.write("**Instruction:**")
+                            st.write(entry["instruction"])
+                            st.write("**Context:**")
+                            st.write(entry["context"])
+                            st.write("**Settings:**")
+                            st.write(f"- Temperature: {entry['settings']['temperature']}")
+                            st.write(f"- Top-k: {entry['settings']['top_k']}")
+                            st.write(f"- Top-p: {entry['settings']['top_p']}")
+                            st.write("**Generated Captions:**")
+                            for i, caption in enumerate(entry["captions"]):
+                                st.write(f"*Caption {i + 1}:* {caption}")
+                            
+                            if st.button("Use These Settings", key=f"settings_{idx}"):
+                                st.session_state.temperature = entry["settings"]["temperature"]
+                                st.session_state.top_k = entry["settings"]["top_k"]
+                                st.session_state.top_p = entry["settings"]["top_p"]
+                                st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
