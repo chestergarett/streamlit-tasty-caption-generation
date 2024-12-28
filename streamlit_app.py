@@ -74,7 +74,9 @@ def initialize_session_state():
         "max_length": 1024,
         "temperature": 0.90,
         "top_k": 50,
-        "top_p": 0.90
+        "top_p": 0.90,
+        "pending_settings": None,
+        "settings_updated": False
     }
     
     # Only set defaults if they don't exist in session state
@@ -165,10 +167,8 @@ def show_history_page():
     else:
         total_entries = len(st.session_state.caption_history)
         for idx, entry in enumerate(st.session_state.caption_history):
-            # Reverse the numbering: newest gets highest number
             display_num = total_entries - idx
             
-            # Auto-expand the latest (which will now have the highest number)
             with st.expander(f"Generation {display_num}", expanded=(idx == 0)):
                 st.write("**Instruction:**")
                 st.write(entry["instruction"])
@@ -182,21 +182,23 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
-                # Use a unique key for each button and handle the click
                 if st.button("Use These Settings", key=f"use_settings_{display_num}"):
-                    # Update the settings in session state
-                    st.session_state.temperature = entry["settings"]["temperature"]
-                    st.session_state.top_k = entry["settings"]["top_k"]
-                    st.session_state.top_p = entry["settings"]["top_p"]
-                    # Switch back to generation page
+                    # Store the settings we want to apply
+                    st.session_state.pending_settings = entry["settings"]
                     st.session_state.show_history = False
-                    # Add a success message
                     st.session_state.settings_updated = True
                     st.rerun()
 
 def main():
     # Initialize session state
     initialize_session_state()
+    
+    # Apply any pending settings before creating widgets
+    if st.session_state.pending_settings is not None:
+        st.session_state.temperature = st.session_state.pending_settings["temperature"]
+        st.session_state.top_k = st.session_state.pending_settings["top_k"]
+        st.session_state.top_p = st.session_state.pending_settings["top_p"]
+        st.session_state.pending_settings = None  # Clear pending settings
     
     if 'show_history' not in st.session_state:
         st.session_state.show_history = False
