@@ -77,3 +77,34 @@
     transition: opacity 0.3s;
     margin-left: -86px;
 }
+
+/* Right sidebar styling */
+[data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
+    width: 350px;
+}
+
+[data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
+    width: 350px;
+    margin-left: -350px;
+}
+
+.right-sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 350px;
+    height: 100vh;
+    background-color: #0E1117;
+    padding: 2rem 1rem;
+    transition: margin-right 0.3s;
+    z-index: 999;
+}
+
+.right-sidebar.hidden {
+    margin-right: -350px;
+}
+
+/* Add some padding to the main content to prevent overlap */
+.main-content {
+    margin-right: 2rem;
+}

@@ -97,107 +97,15 @@ def main():
     
     # First check login
     if not login_page():
-        st.stop()  # Stop execution if not logged in
+        st.stop()
     
     # Load CSS file
     load_css("styles.css")
     
-    # Initialize API credentials after successful login
+    # Initialize API credentials
     access_token = initialize_api_credentials()
-    
-    # Streamlit App Title
-    st.markdown(
-        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
-        unsafe_allow_html=True
-    )
-    
-    # Welcome message with username
-    st.markdown(f"Welcome, {st.session_state.username}!")
-    
-    # Main content area
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        # Main content: Input fields and caption generation
-        instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
-        input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
-        
-        # Generate button below the input fields
-        if st.button("Generate Captions", use_container_width=True):
-            is_valid, error_message = validate_inputs(instruction, input_text)
-            if not is_valid:
-                st.error(error_message)
-            else:
-                # Clear previous captions
-                st.session_state.generated_captions = []
-                
-                # Create a placeholder for streaming captions
-                caption_placeholder = st.empty()
-                
-                # Generate captions logic
-                for i in range(st.session_state["num_captions"]):
-                    with st.spinner(f"Generating caption {i + 1}..."):
-                        response = generate_caption_from_api(
-                            instruction,
-                            input_text,
-                            st.session_state["max_length"],
-                            st.session_state["temperature"],
-                            st.session_state["top_k"],
-                            st.session_state["top_p"],
-                            access_token
-                        )
-                        
-                        if response:
-                            st.session_state.generated_captions.append(response)
-                            caption_text = ""
-                            for idx, caption in enumerate(st.session_state.generated_captions):
-                                caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
-                            caption_placeholder.markdown(caption_text)
-                
-                # After generation is complete, add to history
-                if st.session_state.generated_captions:
-                    history_entry = {
-                        "instruction": instruction,
-                        "context": input_text,
-                        "captions": st.session_state.generated_captions,
-                        "settings": {
-                            "temperature": st.session_state.temperature,
-                            "top_k": st.session_state.top_k,
-                            "top_p": st.session_state.top_p
-                        }
-                    }
-                    st.session_state.caption_history.insert(0, history_entry)
 
-    # Right column for history toggle
-    with col2:
-        show_history = st.toggle("Show Generation History", value=False)
-        
-        if show_history:
-            st.markdown("### Generation History")
-            if not st.session_state.caption_history:
-                st.info("No generation history yet")
-            else:
-                for idx, entry in enumerate(st.session_state.caption_history):
-                    with st.expander(f"Generation {idx + 1}"):
-                        st.markdown("**Instruction:**")
-                        st.markdown(entry["instruction"])
-                        st.markdown("**Context:**")
-                        st.markdown(entry["context"])
-                        st.markdown("**Settings:**")
-                        st.markdown(f"- Temperature: {entry['settings']['temperature']}")
-                        st.markdown(f"- Top-k: {entry['settings']['top_k']}")
-                        st.markdown(f"- Top-p: {entry['settings']['top_p']}")
-                        st.markdown("**Generated Captions:**")
-                        for i, caption in enumerate(entry["captions"]):
-                            st.markdown(f"*Caption {i + 1}:* {caption}")
-                        
-                        if st.button("Use These Settings", key=f"use_settings_{idx}"):
-                            st.session_state.temperature = entry["settings"]["temperature"]
-                            st.session_state.top_k = entry["settings"]["top_k"]
-                            st.session_state.top_p = entry["settings"]["top_p"]
-                            st.rerun()
-
-    # Generation Settings in left Sidebar
+    # Left sidebar for Generation Settings
     with st.sidebar:
         st.header("Generation Settings")
         
@@ -290,6 +198,115 @@ def main():
 
     # Add logout button at the bottom of sidebar
     add_logout_button()
+
+    # Main content area with proper margins
+    st.markdown('<div class="main-content">', unsafe_allow_html=True)
+    
+    # App Title
+    st.markdown(
+        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
+        unsafe_allow_html=True
+    )
+    
+    # Welcome message
+    st.markdown(f"Welcome, {st.session_state.username}!")
+    
+    # Input fields
+    instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
+    input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
+    
+    # Generate button
+    if st.button("Generate Captions", use_container_width=True):
+        is_valid, error_message = validate_inputs(instruction, input_text)
+        if not is_valid:
+            st.error(error_message)
+        else:
+            # Clear previous captions
+            st.session_state.generated_captions = []
+            
+            # Create a placeholder for streaming captions
+            caption_placeholder = st.empty()
+            
+            # Generate captions logic
+            for i in range(st.session_state["num_captions"]):
+                with st.spinner(f"Generating caption {i + 1}..."):
+                    response = generate_caption_from_api(
+                        instruction,
+                        input_text,
+                        st.session_state["max_length"],
+                        st.session_state["temperature"],
+                        st.session_state["top_k"],
+                        st.session_state["top_p"],
+                        access_token
+                    )
+                    
+                    if response:
+                        st.session_state.generated_captions.append(response)
+                        caption_text = ""
+                        for idx, caption in enumerate(st.session_state.generated_captions):
+                            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
+                        caption_placeholder.markdown(caption_text)
+            
+            # After generation is complete, add to history
+            if st.session_state.generated_captions:
+                history_entry = {
+                    "instruction": instruction,
+                    "context": input_text,
+                    "captions": st.session_state.generated_captions,
+                    "settings": {
+                        "temperature": st.session_state.temperature,
+                        "top_k": st.session_state.top_k,
+                        "top_p": st.session_state.top_p
+                    }
+                }
+                st.session_state.caption_history.insert(0, history_entry)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Right sidebar for history
+    st.markdown("""
+        <div class="right-sidebar" id="right-sidebar">
+            <h3>Generation History</h3>
+            <button onclick="toggleRightSidebar()" style="position: absolute; left: -30px; top: 50%; transform: translateY(-50%); width: 30px; height: 60px; background: #262730; border: none; cursor: pointer; border-radius: 5px 0 0 5px;">
+                ◀
+            </button>
+            <div id="history-content">
+    """, unsafe_allow_html=True)
+
+    # History content
+    if not st.session_state.caption_history:
+        st.info("No generation history yet")
+    else:
+        for idx, entry in enumerate(st.session_state.caption_history):
+            with st.expander(f"Generation {idx + 1}"):
+                st.markdown("**Instruction:**")
+                st.markdown(entry["instruction"])
+                st.markdown("**Context:**")
+                st.markdown(entry["context"])
+                st.markdown("**Settings:**")
+                st.markdown(f"- Temperature: {entry['settings']['temperature']}")
+                st.markdown(f"- Top-k: {entry['settings']['top_k']}")
+                st.markdown(f"- Top-p: {entry['settings']['top_p']}")
+                st.markdown("**Generated Captions:**")
+                for i, caption in enumerate(entry["captions"]):
+                    st.markdown(f"*Caption {i + 1}:* {caption}")
+                
+                if st.button("Use These Settings", key=f"use_settings_{idx}"):
+                    st.session_state.temperature = entry["settings"]["temperature"]
+                    st.session_state.top_k = entry["settings"]["top_k"]
+                    st.session_state.top_p = entry["settings"]["top_p"]
+                    st.rerun()
+
+    # Add JavaScript for toggling the sidebar
+    st.markdown("""
+        </div></div>
+        <script>
+            function toggleRightSidebar() {
+                const sidebar = document.getElementById('right-sidebar');
+                sidebar.classList.toggle('hidden');
+            }
+        </script>
+    """, unsafe_allow_html=True)
 
 def generate_caption_from_api(
     instruction: str,
