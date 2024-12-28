@@ -295,26 +295,21 @@ def main():
         # Add some space before the buttons
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Add History button with dynamic styling - now with more specific CSS selector
-        button_style = """
-            <style>
-            /* Target only the history button using a specific class */
-            div.history-button button {
-                width: 100%;
-            }
-            div.history-button button %s {
-                background-color: white !important;
-                color: black !important;
-            }
-            /* Ensure other buttons maintain their original style */
-            div:not(.history-button) button {
-                background-color: inherit;
-            }
-            </style>
-        """
+        # Add History button with dynamic styling
+        active_style = "background-color: white !important; color: black !important;" if st.session_state.show_history else ""
         
         st.markdown(
-            button_style % ("" if not st.session_state.show_history else ""),
+            f"""
+            <style>
+            div.history-button button {{
+                width: 100%;
+                {active_style}
+            }}
+            div:not(.history-button) button {{
+                background-color: inherit;
+            }}
+            </style>
+            """,
             unsafe_allow_html=True
         )
         
