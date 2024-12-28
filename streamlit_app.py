@@ -68,6 +68,7 @@ def initialize_session_state():
         "authenticated": False,
         "username": None,
         "generated_captions": [],
+        "caption_history": [],
         "num_captions": 1,
         "max_length": 1024,
         "temperature": 0.90,
@@ -117,39 +118,84 @@ def main():
     instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
     input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     
-    if st.button("Generate Captions"):
-        is_valid, error_message = validate_inputs(instruction, input_text)
-        if not is_valid:
-            st.error(error_message)
-        else:
-            # Clear previous captions
-            st.session_state.generated_captions = []
-            
-            # Create a placeholder for streaming captions
-            caption_placeholder = st.empty()
-            
-            # Generate captions logic
-            for i in range(st.session_state["num_captions"]):
-                with st.spinner(f"Generating caption {i + 1}..."):
-                    response = generate_caption_from_api(
-                        instruction,
-                        input_text,
-                        st.session_state["max_length"],
-                        st.session_state["temperature"],
-                        st.session_state["top_k"],
-                        st.session_state["top_p"],
-                        access_token
-                    )
-                    
-                    if response:
-                        # Store caption in session state
-                        st.session_state.generated_captions.append(response)
+    # Create three columns: left sidebar, main content, and right sidebar
+    left_sidebar, main_content, right_sidebar = st.columns([1, 2, 1])
+
+    with main_content:
+        if st.button("Generate Captions"):
+            is_valid, error_message = validate_inputs(instruction, input_text)
+            if not is_valid:
+                st.error(error_message)
+            else:
+                # Clear previous captions
+                st.session_state.generated_captions = []
+                
+                # Create a placeholder for streaming captions
+                caption_placeholder = st.empty()
+                
+                # Generate captions logic
+                for i in range(st.session_state["num_captions"]):
+                    with st.spinner(f"Generating caption {i + 1}..."):
+                        response = generate_caption_from_api(
+                            instruction,
+                            input_text,
+                            st.session_state["max_length"],
+                            st.session_state["temperature"],
+                            st.session_state["top_k"],
+                            st.session_state["top_p"],
+                            access_token
+                        )
                         
-                        # Update the display with all generated captions so far
-                        caption_text = ""
-                        for idx, caption in enumerate(st.session_state.generated_captions):
-                            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
-                        caption_placeholder.markdown(caption_text)
+                        if response:
+                            # Store caption in session state
+                            st.session_state.generated_captions.append(response)
+                            
+                            # Update the display with all generated captions so far
+                            caption_text = ""
+                            for idx, caption in enumerate(st.session_state.generated_captions):
+                                caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
+                            caption_placeholder.markdown(caption_text)
+                
+                # After generation is complete, add to history
+                if st.session_state.generated_captions:
+                    history_entry = {
+                        "instruction": instruction,
+                        "context": input_text,
+                        "captions": st.session_state.generated_captions,
+                        "settings": {
+                            "temperature": st.session_state.temperature,
+                            "top_k": st.session_state.top_k,
+                            "top_p": st.session_state.top_p
+                        }
+                    }
+                    st.session_state.caption_history.insert(0, history_entry)  # Add to start of list
+
+    # Right sidebar for history
+    with right_sidebar:
+        st.markdown("### Generation History")
+        if not st.session_state.caption_history:
+            st.info("No generation history yet")
+        else:
+            for idx, entry in enumerate(st.session_state.caption_history):
+                with st.expander(f"Generation {idx + 1}"):
+                    st.markdown("**Instruction:**")
+                    st.markdown(entry["instruction"])
+                    st.markdown("**Context:**")
+                    st.markdown(entry["context"])
+                    st.markdown("**Settings:**")
+                    st.markdown(f"- Temperature: {entry['settings']['temperature']}")
+                    st.markdown(f"- Top-k: {entry['settings']['top_k']}")
+                    st.markdown(f"- Top-p: {entry['settings']['top_p']}")
+                    st.markdown("**Generated Captions:**")
+                    for i, caption in enumerate(entry["captions"]):
+                        st.markdown(f"*Caption {i + 1}:* {caption}")
+                    
+                    # Add a button to reuse these settings
+                    if st.button("Use These Settings", key=f"use_settings_{idx}"):
+                        st.session_state.temperature = entry["settings"]["temperature"]
+                        st.session_state.top_k = entry["settings"]["top_k"]
+                        st.session_state.top_p = entry["settings"]["top_p"]
+                        st.rerun()
 
     # Generation Settings in Sidebar
     with st.sidebar:
