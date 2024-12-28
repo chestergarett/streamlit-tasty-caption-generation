@@ -95,6 +95,9 @@ def main():
     # Initialize session state
     initialize_session_state()
     
+    if 'show_history' not in st.session_state:
+        st.session_state.show_history = False
+    
     # First check login
     if not login_page():
         st.stop()
@@ -196,10 +199,17 @@ def main():
             help="Also known as nucleus sampling. Controls diversity by considering tokens whose cumulative probability exceeds P. Lower values (0.1) are more focused, higher values (0.9) are more diverse."
         )
 
+        # Add some space before the history button
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        
+        # Add History button in sidebar
+        if st.button("📜 View Generation History", use_container_width=True):
+            st.session_state.show_history = True
+
     # Add logout button at the bottom of sidebar
     add_logout_button()
 
-    # Main content area with proper margins
+    # Main content area
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
     
     # App Title
@@ -261,52 +271,75 @@ def main():
                 }
                 st.session_state.caption_history.insert(0, history_entry)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Right sidebar for history
-    st.markdown("""
-        <div class="right-sidebar" id="right-sidebar">
-            <h3>Generation History</h3>
-            <button onclick="toggleRightSidebar()" style="position: absolute; left: -30px; top: 50%; transform: translateY(-50%); width: 30px; height: 60px; background: #262730; border: none; cursor: pointer; border-radius: 5px 0 0 5px;">
-                ◀
-            </button>
-            <div id="history-content">
-    """, unsafe_allow_html=True)
-
-    # History content
-    if not st.session_state.caption_history:
-        st.info("No generation history yet")
-    else:
-        for idx, entry in enumerate(st.session_state.caption_history):
-            with st.expander(f"Generation {idx + 1}"):
-                st.markdown("**Instruction:**")
-                st.markdown(entry["instruction"])
-                st.markdown("**Context:**")
-                st.markdown(entry["context"])
-                st.markdown("**Settings:**")
-                st.markdown(f"- Temperature: {entry['settings']['temperature']}")
-                st.markdown(f"- Top-k: {entry['settings']['top_k']}")
-                st.markdown(f"- Top-p: {entry['settings']['top_p']}")
-                st.markdown("**Generated Captions:**")
-                for i, caption in enumerate(entry["captions"]):
-                    st.markdown(f"*Caption {i + 1}:* {caption}")
+    # History Modal
+    if st.session_state.show_history:
+        modal_html = """
+            <div class="modal-backdrop" id="historyModal" style="display: block;">
+                <div class="modal-content">
+                    <button class="close-button" onclick="closeModal()">×</button>
+                    <h2>Generation History</h2>
+        """
+        
+        if not st.session_state.caption_history:
+            modal_html += "<p>No generation history yet</p>"
+        else:
+            for idx, entry in enumerate(st.session_state.caption_history):
+                modal_html += f"""
+                    <details>
+                        <summary>Generation {idx + 1}</summary>
+                        <p><strong>Instruction:</strong><br>{entry['instruction']}</p>
+                        <p><strong>Context:</strong><br>{entry['context']}</p>
+                        <p><strong>Settings:</strong></p>
+                        <ul>
+                            <li>Temperature: {entry['settings']['temperature']}</li>
+                            <li>Top-k: {entry['settings']['top_k']}</li>
+                            <li>Top-p: {entry['settings']['top_p']}</li>
+                        </ul>
+                        <p><strong>Generated Captions:</strong></p>
+                """
+                for i, caption in enumerate(entry['captions']):
+                    modal_html += f"<p><em>Caption {i + 1}:</em> {caption}</p>"
                 
-                if st.button("Use These Settings", key=f"use_settings_{idx}"):
-                    st.session_state.temperature = entry["settings"]["temperature"]
-                    st.session_state.top_k = entry["settings"]["top_k"]
-                    st.session_state.top_p = entry["settings"]["top_p"]
-                    st.rerun()
+                modal_html += f"""
+                    <button onclick="useSettings({entry['settings']['temperature']}, {entry['settings']['top_k']}, {entry['settings']['top_p']})">
+                        Use These Settings
+                    </button>
+                    </details>
+                """
+        
+        modal_html += """
+                </div>
+            </div>
+            <script>
+                function closeModal() {
+                    window.parent.postMessage({type: 'closeModal'}, '*');
+                }
+                
+                function useSettings(temp, topk, topp) {
+                    window.parent.postMessage({
+                        type: 'useSettings',
+                        settings: {temperature: temp, top_k: topk, top_p: topp}
+                    }, '*');
+                }
+            </script>
+        """
+        
+        st.markdown(modal_html, unsafe_allow_html=True)
+        
+        # Handle messages from JavaScript
+        components.html("""
+            <script>
+                window.addEventListener('message', function(e) {
+                    if (e.data.type === 'closeModal') {
+                        window.parent.postMessage({type: 'streamlit:setComponentValue', value: false}, '*');
+                    } else if (e.data.type === 'useSettings') {
+                        window.parent.postMessage({type: 'streamlit:setComponentValue', value: e.data.settings}, '*');
+                    }
+                });
+            </script>
+        """, height=0)
 
-    # Add JavaScript for toggling the sidebar
-    st.markdown("""
-        </div></div>
-        <script>
-            function toggleRightSidebar() {
-                const sidebar = document.getElementById('right-sidebar');
-                sidebar.classList.toggle('hidden');
-            }
-        </script>
-    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def generate_caption_from_api(
     instruction: str,
