@@ -110,10 +110,11 @@ def show_generation_page(access_token):
         if not is_valid:
             st.error(error_message)
         else:
-            # Your existing generation code...
+            # Clear previous captions
             st.session_state.generated_captions = []
             caption_placeholder = st.empty()
             
+            # Generate captions
             for i in range(st.session_state["num_captions"]):
                 with st.spinner(f"Generating caption {i + 1}..."):
                     response = generate_caption_from_api(
@@ -131,6 +132,21 @@ def show_generation_page(access_token):
                         for idx, caption in enumerate(st.session_state.generated_captions):
                             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
                         caption_placeholder.markdown(caption_text)
+            
+            # After generation is complete, add to history
+            if st.session_state.generated_captions:
+                history_entry = {
+                    "instruction": instruction,
+                    "context": input_text,
+                    "captions": st.session_state.generated_captions,
+                    "settings": {
+                        "temperature": st.session_state.temperature,
+                        "top_k": st.session_state.top_k,
+                        "top_p": st.session_state.top_p
+                    }
+                }
+                # Add new entry to the beginning of the history
+                st.session_state.caption_history.insert(0, history_entry)
 
 def show_history_page():
     """Display the history page"""
