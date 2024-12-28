@@ -111,32 +111,8 @@ def show_generation_page(access_token):
         st.session_state.settings_updated = False
     
     # Input fields and generation button
-    instruction = st.text_input("Enter Instruction:", 
-                              placeholder="Generate a *Category* Caption",
-                              disabled=st.session_state.is_generating)
-    input_text = st.text_area("Enter Context:", 
-                             placeholder="Describe the Caption",
-                             disabled=st.session_state.is_generating)
-    
-    # Create columns for Generate and Stop buttons
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        generate_button = st.button(
-            "Generate Captions",
-            use_container_width=True,
-            disabled=st.session_state.is_generating
-        )
-    
-    with col2:
-        if st.button(
-            "Stop",
-            type="secondary",
-            use_container_width=True,
-            disabled=not st.session_state.is_generating
-        ):
-            st.session_state.is_generating = False
-            st.rerun()
+    instruction = st.text_input("Enter Instruction:", placeholder="Generate a *Category* Caption")
+    input_text = st.text_area("Enter Context:", placeholder="Describe the Caption")
     
     # Create a placeholder for captions
     caption_placeholder = st.empty()
@@ -148,60 +124,47 @@ def show_generation_page(access_token):
             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
         caption_placeholder.markdown(caption_text)
     
-    if generate_button:
+    if st.button("Generate Captions", use_container_width=True):
         is_valid, error_message = validate_inputs(instruction, input_text)
         if not is_valid:
             st.error(error_message)
         else:
-            # Set generating state to True
-            st.session_state.is_generating = True
-            
             # Clear previous captions
             st.session_state.current_captions = []
             
-            try:
-                # Generate captions
-                for i in range(st.session_state["num_captions"]):
-                    # Check if generation was stopped
-                    if not st.session_state.is_generating:
-                        st.warning("Generation stopped by user.")
-                        break
-                        
-                    with st.spinner(f"Generating caption {i + 1}..."):
-                        response = generate_caption_from_api(
-                            instruction, input_text,
-                            st.session_state["max_length"],
-                            st.session_state["temperature"],
-                            st.session_state["top_k"],
-                            st.session_state["top_p"],
-                            access_token
-                        )
-                        
-                        if response:
-                            st.session_state.current_captions.append(response)
-                            caption_text = ""
-                            for idx, caption in enumerate(st.session_state.current_captions):
-                                caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
-                            caption_placeholder.markdown(caption_text)
-                
-                # After generation is complete or stopped, add to history if we have captions
-                if st.session_state.current_captions:
-                    history_entry = {
-                        "instruction": instruction,
-                        "context": input_text,
-                        "captions": st.session_state.current_captions.copy(),
-                        "settings": {
-                            "temperature": st.session_state.temperature,
-                            "top_k": st.session_state.top_k,
-                            "top_p": st.session_state.top_p
-                        }
-                    }
-                    st.session_state.caption_history.insert(0, history_entry)
+            # Generate captions
+            for i in range(st.session_state["num_captions"]):
+                with st.spinner(f"Generating caption {i + 1}..."):
+                    response = generate_caption_from_api(
+                        instruction, input_text,
+                        st.session_state["max_length"],
+                        st.session_state["temperature"],
+                        st.session_state["top_k"],
+                        st.session_state["top_p"],
+                        access_token
+                    )
+                    
+                    if response:
+                        st.session_state.current_captions.append(response)
+                        caption_text = ""
+                        for idx, caption in enumerate(st.session_state.current_captions):
+                            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
+                        caption_placeholder.markdown(caption_text)
             
-            finally:
-                # Always reset the generating state when done
-                st.session_state.is_generating = False
-                st.rerun()
+            # After generation is complete, add to history
+            if st.session_state.current_captions:
+                history_entry = {
+                    "instruction": instruction,
+                    "context": input_text,
+                    "captions": st.session_state.current_captions.copy(),
+                    "settings": {
+                        "temperature": st.session_state.temperature,
+                        "top_k": st.session_state.top_k,
+                        "top_p": st.session_state.top_p
+                    }
+                }
+                # Add new entry to the beginning of the history
+                st.session_state.caption_history.insert(0, history_entry)
 
 def show_history_page():
     """Display the history page"""
@@ -246,7 +209,7 @@ def main():
         st.session_state.temperature = st.session_state.pending_settings["temperature"]
         st.session_state.top_k = st.session_state.pending_settings["top_k"]
         st.session_state.top_p = st.session_state.pending_settings["top_p"]
-        st.session_state.pending_settings = None
+        st.session_state.pending_settings = None  # Clear pending settings
     
     if 'show_history' not in st.session_state:
         st.session_state.show_history = False
@@ -265,88 +228,98 @@ def main():
     with st.sidebar:
         st.header("Generation Settings")
         
-        # Disable all settings controls during generation
-        disabled_state = st.session_state.is_generating
-        
-        # Templates
+        # Add template buttons first
         st.markdown("### Templates")
+        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+        
         col1, col2, col3 = st.columns(3)
         
-        with col1:
-            st.button("Default", disabled=disabled_state, 
-                     on_click=lambda: set_template_settings("default"))
-        with col2:
-            st.button("Template 2", disabled=disabled_state,
-                     on_click=lambda: set_template_settings("template2"))
-        with col3:
-            st.button("Template 3", disabled=disabled_state,
-                     on_click=lambda: set_template_settings("template3"))
+        # Default Template
+        if col1.button("Default"):
+            st.session_state["num_captions"] = 1
+            st.session_state["max_length"] = 1024
+            st.session_state["temperature"] = 0.90
+            st.session_state["top_k"] = 50
+            st.session_state["top_p"] = 0.90
+            st.rerun()
         
-        # Number of Captions slider
+        # Template 2
+        if col2.button("Template 2"):
+            st.session_state["num_captions"] = 1
+            st.session_state["max_length"] = 1024
+            st.session_state["temperature"] = 1.20
+            st.session_state["top_k"] = 80
+            st.session_state["top_p"] = 0.40
+            st.rerun()
+        
+        # Template 3
+        if col3.button("Template 3"):
+            st.session_state["num_captions"] = 1
+            st.session_state["max_length"] = 1024
+            st.session_state["temperature"] = 1.30
+            st.session_state["top_k"] = 90
+            st.session_state["top_p"] = 0.50
+            st.rerun()
+        
+        st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+        
+        # Sliders and inputs for settings with tooltips
         st.slider(
-            "Number of Captions",
-            min_value=1,
-            max_value=100,
-            value=st.session_state.get("num_captions", 1),
-            step=1,
+            "Number of Captions", 
+            min_value=1, 
+            max_value=100, 
+            value=st.session_state.num_captions,
             key="num_captions",
-            help="Number of captions to generate",
-            disabled=disabled_state
+            help="Controls how many different captions to generate. Higher values will generate more variations but take longer."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
-        # Max Tokens slider
-        st.slider(
-            "Max Tokens",
-            min_value=256,
-            max_value=1024,
-            value=st.session_state.get("max_length", 1024),
-            step=256,
+        st.select_slider(
+            "Max Tokens", 
+            options=[256, 512, 1024], 
+            value=st.session_state.max_length,
             key="max_length",
-            help="Maximum length of generated text",
-            disabled=disabled_state
+            help="Maximum length of the generated caption in tokens. Higher values allow for longer captions but may increase generation time."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
-        # Temperature slider
         st.slider(
             "Temperature", 
             min_value=0.0, 
             max_value=1.5, 
-            value=st.session_state.get("temperature", 0.9),
+            value=st.session_state.temperature,
             step=0.10, 
             key="temperature",
-            help="Controls randomness in the generation...",
-            disabled=disabled_state
+            help="Controls randomness in the generation. Higher values (e.g., 1.0) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
-        # Top-K slider
         st.slider(
             "Top-K", 
             min_value=0, 
             max_value=100, 
-            value=st.session_state.get("top_k", 50),
+            value=st.session_state.top_k,
             step=10, 
             key="top_k",
-            help="Limits the cumulative probability...",
-            disabled=disabled_state
+            help="Limits the cumulative probability of tokens considered for generation. Only the top K most likely tokens are considered. Lower values increase focus but may reduce creativity."
         )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
-        # Top-P slider
         st.slider(
             "Top-P", 
             min_value=0.0, 
             max_value=1.0, 
-            value=st.session_state.get("top_p", 0.9),
+            value=st.session_state.top_p,
             step=0.10, 
             key="top_p",
-            help="Also known as nucleus sampling...",
-            disabled=disabled_state
+            help="Also known as nucleus sampling. Controls diversity by considering tokens whose cumulative probability exceeds P. Lower values (0.1) are more focused, higher values (0.9) are more diverse."
         )
-        
-        # Add some space before the history button
+
+        # Add some space before the buttons
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # History button with dynamic styling
-        active_style = "background-color: white; color: black;" if st.session_state.show_history else ""
+        # Add History button with dynamic styling
+        active_style = "background-color: white !important; color: black !important;" if st.session_state.show_history else ""
         
         st.markdown(
             f"""
@@ -365,19 +338,14 @@ def main():
         
         # Wrap the history button in a div with the specific class
         st.markdown('<div class="history-button">', unsafe_allow_html=True)
-        if st.button("📜 View Generation History", 
-                    use_container_width=True,
-                    key="history_button",
-                    disabled=disabled_state):
+        if st.button("📜 View Generation History", use_container_width=True, key="history_button"):
             st.session_state.show_history = not st.session_state.show_history
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Add Logout button at the bottom
         st.markdown('<div style="position: fixed; bottom: 20px; width: 300px;">', unsafe_allow_html=True)
-        if st.button("Logout", 
-                    use_container_width=True,
-                    disabled=disabled_state):
+        if st.button("Logout", use_container_width=True):
             for key in st.session_state.keys():
                 del st.session_state[key]
             st.rerun()
