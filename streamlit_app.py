@@ -78,20 +78,7 @@ def initialize_session_state():
         "top_p": 0.90,
         "pending_settings": None,
         "settings_updated": False,
-        "is_generating": False,
-        "instruction_categories": {
-            "Tip me": "Generate a Tip Me Caption",
-            "Winner": "Generate a Winner Caption",
-            "Holiday": "Generate a Holiday Caption",
-            "Bundle": "Generate a Bundle Caption",
-            "Descriptive": "Generate a Descriptive Caption",
-            "Spin the Wheel": "Generate a Spin the Wheel Caption",
-            "Girlfriend": "Generate a Girlfriend Caption",
-            "List": "Generate a List Caption",
-            "Short": "Generate a Short Caption",
-            "Sub Promo": "Generate a Sub Promo Caption",
-            "VIP": "Generate a VIP Caption"
-        }
+        "is_generating": False
     }
     
     # Only set defaults if they don't exist in session state
@@ -123,18 +110,28 @@ def show_generation_page(access_token):
         st.success("Settings updated successfully!")
         st.session_state.settings_updated = False
     
-    # Replace text input with dropdown
-    selected_category = st.selectbox(
-        "Select Caption Category:",
-        options=list(st.session_state.instruction_categories.keys()),
+    # Main content: Input fields and caption generation
+    instruction_options = [
+        "Tip Me",
+        "Winner",
+        "Holiday",
+        "Bundle",
+        "Descriptive",
+        "Spin the Wheel",
+        "Girlfriend",
+        "List",
+        "Short",
+        "Sub Promo",
+        "VIP",
+    ]
+    
+    # Main content: Input fields and caption generation
+    selected_option = st.selectbox(
+        "Select Category:", 
+        options=instruction_options,
         disabled=st.session_state.is_generating
     )
-    
-    # Get the corresponding instruction
-    instruction = st.session_state.instruction_categories[selected_category]
-    
-    # Display the actual instruction that will be used (optional - you can remove this if you don't want to show it)
-    st.caption(f"Using instruction: *{instruction}*")
+    instruction = f"Generate a {selected_option} caption"
     
     input_text = st.text_area(
         "Enter Context:", 
@@ -142,57 +139,27 @@ def show_generation_page(access_token):
         disabled=st.session_state.is_generating
     )
     
-    # Create a placeholder for captions
-    caption_placeholder = st.empty()
+    # Create columns for Generate and Stop buttons
+    col1, col2 = st.columns([4, 1])
     
-    # Display existing captions if they exist
-    if 'current_captions' in st.session_state and st.session_state.current_captions:
-        caption_text = ""
-        for idx, caption in enumerate(st.session_state.current_captions):
-            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
-        caption_placeholder.markdown(caption_text)
+    with col1:
+        generate_button = st.button(
+            "Generate Captions",
+            use_container_width=True,
+            disabled=st.session_state.is_generating
+        )
     
-    if st.button("Generate Captions", use_container_width=True):
-        is_valid, error_message = validate_inputs(instruction, input_text)
-        if not is_valid:
-            st.error(error_message)
-        else:
-            # Clear previous captions
-            st.session_state.current_captions = []
-            
-            # Generate captions
-            for i in range(st.session_state["num_captions"]):
-                with st.spinner(f"Generating caption {i + 1}..."):
-                    response = generate_caption_from_api(
-                        instruction, input_text,
-                        st.session_state["max_length"],
-                        st.session_state["temperature"],
-                        st.session_state["top_k"],
-                        st.session_state["top_p"],
-                        access_token
-                    )
-                    
-                    if response:
-                        st.session_state.current_captions.append(response)
-                        caption_text = ""
-                        for idx, caption in enumerate(st.session_state.current_captions):
-                            caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
-                        caption_placeholder.markdown(caption_text)
-            
-            # After generation is complete, add to history
-            if st.session_state.current_captions:
-                history_entry = {
-                    "instruction": instruction,
-                    "context": input_text,
-                    "captions": st.session_state.current_captions.copy(),
-                    "settings": {
-                        "temperature": st.session_state.temperature,
-                        "top_k": st.session_state.top_k,
-                        "top_p": st.session_state.top_p
-                    }
-                }
-                # Add new entry to the beginning of the history
-                st.session_state.caption_history.insert(0, history_entry)
+    with col2:
+        if st.button(
+            "Stop",
+            type="secondary",
+            use_container_width=True,
+            disabled=not st.session_state.is_generating
+        ):
+            st.session_state.is_generating = False
+            st.rerun()
+    
+    # Rest of your generation code...
 
 def show_history_page():
     """Display the history page"""
