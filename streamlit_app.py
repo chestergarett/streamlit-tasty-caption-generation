@@ -319,7 +319,7 @@ def main():
         st.markdown("<br><br>", unsafe_allow_html=True)
         
         # Dynamic button text and styling based on current page
-        button_text = "🎯 Generate Captions" if st.session_state.show_history else "📜 View Generation History"
+        button_text = "🫦 Generate Captions" if st.session_state.show_history else "📜 View Generation History"
         active_style = "background-color: white; color: black;" if st.session_state.show_history else ""
         
         st.markdown(
