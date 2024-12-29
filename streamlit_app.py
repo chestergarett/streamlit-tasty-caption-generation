@@ -111,7 +111,7 @@ def add_logout_button():
 def show_generation_page(access_token):
     """Display the main caption generation page"""
     st.markdown(
-        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
+        "<h1 style='text-align: center;'>Tasty Caption Generation 🫦</h1>",
         unsafe_allow_html=True
     )
     
