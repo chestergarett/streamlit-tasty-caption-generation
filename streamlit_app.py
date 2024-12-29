@@ -31,7 +31,7 @@ def login_page():
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+            password = st.text_input("Password", type="password", autocomplete="off")
             
             if st.button("Login"):
                 if check_credentials(username, password):
@@ -111,7 +111,7 @@ def add_logout_button():
 def show_generation_page(access_token):
     """Display the main caption generation page"""
     st.markdown(
-        "<h1 style='text-align: center;'>🫦 Tasty Caption Generation 💦</h1>",
+        "<h1 style='text-align: center;'>Tasty Caption Generation 🫦</h1>",
         unsafe_allow_html=True
     )
     
@@ -221,7 +221,7 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
-                if st.button("Use These Settings", key=f"use_settings_{display_num}"):
+                if st.button("Load Parameters Used", key=f"use_settings_{display_num}"):
                     # Store the settings we want to apply
                     st.session_state.pending_settings = entry["settings"]
                     st.session_state.show_history = False
