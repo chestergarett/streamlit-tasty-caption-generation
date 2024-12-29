@@ -222,31 +222,31 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
-                # Add the Export to Excel button
-                if st.button("Export to Excel", key=f"export_to_excel_{display_num}"):
-                    # Create a DataFrame from the captions
-                    df = pd.DataFrame({"Caption": entry["captions"]})
-                    # Save the DataFrame to an Excel file
-                    with st.empty():
-                        st.write("Exporting to Excel...")
-                        df.to_excel("generated_captions.xlsx", index=False)
-                    # Download the Excel file
-                    with open("generated_captions.xlsx", "rb") as file:
-                        file_bytes = file.read()
-                    st.download_button(
-                        label="Click here to download the Excel file",
-                        data=file_bytes,
-                        file_name="generated_captions.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key=f"download_excel_{display_num}"
-                    )
-                
+                # Button to load parameters used
                 if st.button("Load Parameters Used", key=f"use_settings_{display_num}"):
                     # Store the settings we want to apply
                     st.session_state.pending_settings = entry["settings"]
                     st.session_state.show_history = False
                     st.session_state.settings_updated = True
                     st.rerun()
+                
+                # Button to export captions to Excel
+                if st.button("Export to Excel", key=f"export_to_excel_{display_num}"):
+                    # Create a DataFrame from the captions
+                    df = pd.DataFrame({"Captions": entry["captions"]})
+                    # Save the DataFrame to an Excel file
+                    excel_file = "generated_captions.xlsx"
+                    df.to_excel(excel_file, index=False)
+                    
+                    # Download the Excel file
+                    with open(excel_file, "rb") as file:
+                        st.download_button(
+                            label="Download Captions",
+                            data=file,
+                            file_name=excel_file,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key=f"download_excel_{display_num}"
+                        )
 
 def main():
     # Initialize session state

@@ -20,3 +20,5 @@ google-auth-oauthlib
 streamlit-authenticator
 python-dotenv
 extra-streamlit-components
+openpyxl
+pandas
