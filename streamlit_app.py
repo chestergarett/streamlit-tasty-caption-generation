@@ -221,7 +221,7 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
-                if st.button("Use These Settings", key=f"use_settings_{display_num}"):
+                if st.button("Load Parameters Used", key=f"use_settings_{display_num}"):
                     # Store the settings we want to apply
                     st.session_state.pending_settings = entry["settings"]
                     st.session_state.show_history = False
