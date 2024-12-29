@@ -7,7 +7,6 @@ from google.oauth2 import service_account
 from dotenv import load_dotenv 
 import streamlit.components.v1 as components
 import pandas as pd
-from streamlit.uploaded_file_manager import UploadedFile
 
 load_dotenv() 
 
