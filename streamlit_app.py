@@ -6,6 +6,7 @@ from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from dotenv import load_dotenv 
 import streamlit.components.v1 as components
+import pandas as pd
 
 load_dotenv() 
 
@@ -221,12 +222,31 @@ def show_history_page():
                 for i, caption in enumerate(entry["captions"]):
                     st.write(f"*Caption {i + 1}:* {caption}")
                 
+                # Button to load parameters used
                 if st.button("Load Parameters Used", key=f"use_settings_{display_num}"):
                     # Store the settings we want to apply
                     st.session_state.pending_settings = entry["settings"]
                     st.session_state.show_history = False
                     st.session_state.settings_updated = True
                     st.rerun()
+                
+                # Button to export captions to Excel
+                if st.button("Export to Excel", key=f"export_to_excel_{display_num}"):
+                    # Create a DataFrame from the captions
+                    df = pd.DataFrame({"Captions": entry["captions"]})
+                    # Save the DataFrame to an Excel file
+                    excel_file = "generated_captions.xlsx"
+                    df.to_excel(excel_file, index=False)
+                    
+                    # Download the Excel file
+                    with open(excel_file, "rb") as file:
+                        st.download_button(
+                            label="Download Captions",
+                            data=file,
+                            file_name=excel_file,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key=f"download_excel_{display_num}"
+                        )
 
 def main():
     # Initialize session state
