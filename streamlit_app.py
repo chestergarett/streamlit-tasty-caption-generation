@@ -156,7 +156,7 @@ def show_generation_page(access_token):
     if st.button("Generate Captions", use_container_width=True):
         is_valid, error_message = validate_inputs(instruction, input_text)
         if not is_valid:
-            show_notification(error_message, "error")  # Notify user of input error
+            st.error(error_message)
         else:
             # Clear previous captions
             st.session_state.current_captions = []
@@ -175,7 +175,6 @@ def show_generation_page(access_token):
                     
                     if response:
                         st.session_state.current_captions.append(response)
-                        show_notification("Captions generated successfully!", "success")  # Notify user of success
                         caption_text = ""
                         for idx, caption in enumerate(st.session_state.current_captions):
                             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
@@ -509,17 +508,6 @@ def validate_inputs(instruction: str, input_text: str) -> tuple[bool, str]:
     if len(input_text) > 1000:  # Example limit
         return False, "Context is too long (max 1000 characters)"
     return True, ""
-
-def show_notification(message: str, notification_type: str = "info"):
-    """Display a notification message to the user."""
-    if notification_type == "success":
-        st.success(message)
-    elif notification_type == "error":
-        st.error(message)
-    elif notification_type == "warning":
-        st.warning(message)
-    else:
-        st.info(message)
 
 # Start the Streamlit app
 if __name__ == "__main__":
