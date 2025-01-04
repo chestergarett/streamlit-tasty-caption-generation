@@ -156,7 +156,7 @@ def show_generation_page(access_token):
     if st.button("Generate Captions", use_container_width=True):
         is_valid, error_message = validate_inputs(instruction, input_text)
         if not is_valid:
-            st.error(error_message)
+            show_notification(error_message, "error")  # Notify user of input error
         else:
             # Clear previous captions
             st.session_state.current_captions = []
@@ -175,6 +175,7 @@ def show_generation_page(access_token):
                     
                     if response:
                         st.session_state.current_captions.append(response)
+                        show_notification("Captions generated successfully!", "success")  # Notify user of success
                         caption_text = ""
                         for idx, caption in enumerate(st.session_state.current_captions):
                             caption_text += f"**Caption {idx + 1}:** {caption}\n\n"
@@ -331,16 +332,8 @@ def main():
         )
         st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
-        st.slider(
-            "Temperature", 
-            min_value=0.0, 
-            max_value=1.5, 
-            value=st.session_state.temperature,
-            step=0.10, 
-            key="temperature",
-            help="Controls randomness in the generation. Higher values (e.g., 1.0) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
-        )
-        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        if st.slider("Temperature", min_value=0.0, max_value=1.5, value=st.session_state.temperature, step=0.10, key="temperature"):
+            show_notification("Settings updated successfully!", "success")  # Notify user of settings update
         
         st.slider(
             "Top-K", 
@@ -508,6 +501,17 @@ def validate_inputs(instruction: str, input_text: str) -> tuple[bool, str]:
     if len(input_text) > 1000:  # Example limit
         return False, "Context is too long (max 1000 characters)"
     return True, ""
+
+def show_notification(message: str, notification_type: str = "info"):
+    """Display a notification message to the user."""
+    if notification_type == "success":
+        st.success(message)
+    elif notification_type == "error":
+        st.error(message)
+    elif notification_type == "warning":
+        st.warning(message)
+    else:
+        st.info(message)
 
 # Start the Streamlit app
 if __name__ == "__main__":
