@@ -7,6 +7,7 @@ from google.oauth2 import service_account
 from dotenv import load_dotenv 
 import streamlit.components.v1 as components
 import pandas as pd
+from streamlit_cookies_manager import CookiesManager
 
 load_dotenv() 
 
@@ -249,6 +250,40 @@ def show_history_page():
                         )
 
 def main():
+    # Initialize the cookies manager
+    cookies = CookiesManager()
+    cookies.load()
+    
+    # Load user preferences
+    user_preferences = load_user_preferences()
+    
+    # Initialize session state with user preferences or defaults
+    st.session_state.num_captions = user_preferences.get("num_captions", 1)
+    st.session_state.max_length = user_preferences.get("max_length", 1024)
+    st.session_state.temperature = user_preferences.get("temperature", 0.90)
+    st.session_state.top_k = user_preferences.get("top_k", 50)
+    st.session_state.top_p = user_preferences.get("top_p", 0.90)
+
+    # Sidebar for settings
+    st.sidebar.header("User Preferences")
+    st.session_state.num_captions = st.sidebar.slider("Number of Captions", min_value=1, max_value=100, value=st.session_state.num_captions)
+    st.session_state.max_length = st.sidebar.select_slider("Max Tokens", options=[256, 512, 1024], value=st.session_state.max_length)
+    st.session_state.temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.5, value=st.session_state.temperature, step=0.10)
+    st.session_state.top_k = st.sidebar.slider("Top-K", min_value=0, max_value=100, value=st.session_state.top_k, step=10)
+    st.session_state.top_p = st.sidebar.slider("Top-P", min_value=0.0, max_value=1.0, value=st.session_state.top_p, step=0.10)
+
+    # Save preferences when settings are updated
+    if st.sidebar.button("Save Preferences"):
+        preferences = {
+            "num_captions": st.session_state.num_captions,
+            "max_length": st.session_state.max_length,
+            "temperature": st.session_state.temperature,
+            "top_k": st.session_state.top_k,
+            "top_p": st.session_state.top_p
+        }
+        save_user_preferences(preferences)
+        st.success("Preferences saved successfully!")
+
     # Initialize session state
     initialize_session_state()
     
@@ -508,6 +543,18 @@ def validate_inputs(instruction: str, input_text: str) -> tuple[bool, str]:
     if len(input_text) > 1000:  # Example limit
         return False, "Context is too long (max 1000 characters)"
     return True, ""
+
+def save_user_preferences(preferences):
+    """Save user preferences to cookies."""
+    for key, value in preferences.items():
+        cookies.set(key, value)
+
+def load_user_preferences():
+    """Load user preferences from cookies."""
+    preferences = {}
+    for key in ["num_captions", "max_length", "temperature", "top_k", "top_p"]:
+        preferences[key] = cookies.get(key, default=None)
+    return preferences
 
 # Start the Streamlit app
 if __name__ == "__main__":

@@ -22,3 +22,5 @@ python-dotenv
 extra-streamlit-components
 openpyxl
 pandas
+
+streamlit-cookies-manager
