@@ -252,10 +252,9 @@ def show_history_page():
 def main():
     # Initialize the cookies manager
     cookies = CookieManager()
-    cookies.load()
     
     # Load user preferences
-    user_preferences = load_user_preferences()
+    user_preferences = load_user_preferences(cookies)
     
     # Initialize session state with user preferences or defaults
     st.session_state.num_captions = user_preferences.get("num_captions", 1)
@@ -281,7 +280,7 @@ def main():
             "top_k": st.session_state.top_k,
             "top_p": st.session_state.top_p
         }
-        save_user_preferences(preferences)
+        save_user_preferences(preferences, cookies)
         st.success("Preferences saved successfully!")
 
     # Initialize session state
@@ -544,12 +543,12 @@ def validate_inputs(instruction: str, input_text: str) -> tuple[bool, str]:
         return False, "Context is too long (max 1000 characters)"
     return True, ""
 
-def save_user_preferences(preferences):
+def save_user_preferences(preferences, cookies):
     """Save user preferences to cookies."""
     for key, value in preferences.items():
         cookies.set(key, value)
 
-def load_user_preferences():
+def load_user_preferences(cookies):
     """Load user preferences from cookies."""
     preferences = {}
     for key in ["num_captions", "max_length", "temperature", "top_k", "top_p"]:
