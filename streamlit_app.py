@@ -7,7 +7,7 @@ from google.oauth2 import service_account
 from dotenv import load_dotenv 
 import streamlit.components.v1 as components
 import pandas as pd
-from streamlit_cookies_manager import CookiesManager
+from streamlit_cookies_manager import CookieManager
 
 load_dotenv() 
 
@@ -251,7 +251,7 @@ def show_history_page():
 
 def main():
     # Initialize the cookies manager
-    cookies = CookiesManager()
+    cookies = CookieManager()
     cookies.load()
     
     # Load user preferences
