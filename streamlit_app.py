@@ -332,8 +332,16 @@ def main():
         )
         st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
-        if st.slider("Temperature", min_value=0.0, max_value=1.5, value=st.session_state.temperature, step=0.10, key="temperature"):
-            show_notification("Settings updated successfully!", "success")  # Notify user of settings update
+        st.slider(
+            "Temperature", 
+            min_value=0.0, 
+            max_value=1.5, 
+            value=st.session_state.temperature,
+            step=0.10, 
+            key="temperature",
+            help="Controls randomness in the generation. Higher values (e.g., 1.0) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
+        )
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
         
         st.slider(
             "Top-K", 
